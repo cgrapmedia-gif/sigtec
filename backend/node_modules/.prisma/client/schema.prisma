@@ -1,0 +1,219 @@
+// SIGTEC Consulado — Modelo de dados
+// PostgreSQL (Neon) · Prisma ORM
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Perfil {
+  ADMIN
+  TECNICO
+  FUNCIONARIO
+  DIRECCAO
+}
+
+enum EstadoActivo {
+  EM_ARMAZEM
+  OPERACIONAL
+  EM_MANUTENCAO
+  AVARIADO
+  OBSOLETO
+  ABATIDO
+}
+
+enum EstadoPedido {
+  NOVO
+  EM_ANALISE
+  EM_RESOLUCAO
+  AGUARDA_MATERIAL
+  RESOLVIDO
+  FECHADO
+}
+
+enum Prioridade {
+  BAIXA
+  MEDIA
+  ALTA
+  CRITICA
+}
+
+enum EstadoProposta {
+  COM_PARECER
+  AGUARDA_APROVACAO
+  APROVADA
+  REJEITADA
+}
+
+model Departamento {
+  id      String   @id @default(cuid())
+  nome    String   @unique
+  users   User[]
+  activos Activo[]
+}
+
+model User {
+  id             String        @id @default(cuid())
+  email          String        @unique
+  nome           String
+  passwordHash   String
+  perfil         Perfil        @default(FUNCIONARIO)
+  activo         Boolean       @default(true)
+  localizacao    String?
+  departamento   Departamento? @relation(fields: [departamentoId], references: [id])
+  departamentoId String?
+  criadoEm       DateTime      @default(now())
+
+  pedidosAbertos    Pedido[]               @relation("autor")
+  pedidosAtribuidos Pedido[]               @relation("tecnico")
+  activosAtribuidos Activo[]
+  eventosPedido     EventoPedido[]
+  propostasParecer  PropostaAbate[]        @relation("parecer")
+  autosAprovados    AutoAbate[]
+  respostas         RespostaQuestionario[]
+  notificacoes      Notificacao[]
+}
+
+model Activo {
+  id                String        @id @default(cuid())
+  numInventario     String        @unique
+  categoria         String
+  marca             String
+  modelo            String
+  numSerie          String?
+  dataAquisicao     DateTime
+  fimGarantia       DateTime?
+  localizacao       String
+  departamento      Departamento? @relation(fields: [departamentoId], references: [id])
+  departamentoId    String?
+  responsavel       User?         @relation(fields: [responsavelId], references: [id])
+  responsavelId     String?
+  estado            EstadoActivo  @default(OPERACIONAL)
+  temDisco          Boolean       @default(false)
+  falhas6m          Int           @default(0)
+  custoReparacao    Decimal?      @db.Decimal(10, 2)
+  valorSubstituicao Decimal?      @db.Decimal(10, 2)
+  criadoEm          DateTime      @default(now())
+
+  eventos   EventoActivo[]
+  pedidos   Pedido[]
+  ordens    OrdemManutencao[]
+  propostas PropostaAbate[]
+}
+
+model EventoActivo {
+  id        String   @id @default(cuid())
+  activo    Activo   @relation(fields: [activoId], references: [id], onDelete: Cascade)
+  activoId  String
+  data      DateTime @default(now())
+  descricao String
+  autor     String
+  tipo      String   @default("intervencao")
+}
+
+model Pedido {
+  id         String       @id @default(cuid())
+  numero     String       @unique
+  assunto    String
+  descricao  String?
+  categoria  String
+  prioridade Prioridade   @default(MEDIA)
+  estado     EstadoPedido @default(NOVO)
+  slaHoras   Int          @default(24)
+  autor      User         @relation("autor", fields: [autorId], references: [id])
+  autorId    String
+  tecnico    User?        @relation("tecnico", fields: [tecnicoId], references: [id])
+  tecnicoId  String?
+  activo     Activo?      @relation(fields: [activoId], references: [id])
+  activoId   String?
+  criadoEm   DateTime     @default(now())
+  fechadoEm  DateTime?
+
+  eventos EventoPedido[]
+}
+
+model EventoPedido {
+  id        String   @id @default(cuid())
+  pedido    Pedido   @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  pedidoId  String
+  descricao String
+  interno   Boolean  @default(false)
+  autor     User?    @relation(fields: [autorId], references: [id])
+  autorId   String?
+  criadoEm  DateTime @default(now())
+}
+
+model OrdemManutencao {
+  id           String    @id @default(cuid())
+  tarefa       String
+  categoria    String
+  dataPrevista DateTime
+  activo       Activo?   @relation(fields: [activoId], references: [id])
+  activoId     String?
+  concluida    Boolean   @default(false)
+  concluidaEm  DateTime?
+  concluidaPor String?
+  observacoes  String?
+}
+
+model PropostaAbate {
+  id           String         @id @default(cuid())
+  numero       String         @unique
+  motivo       String
+  parecer      String
+  parecerPor   User           @relation("parecer", fields: [parecerPorId], references: [id])
+  parecerPorId String
+  destino      String
+  sanitizacao  String
+  estado       EstadoProposta @default(COM_PARECER)
+  activos      Activo[]
+  criadoEm     DateTime       @default(now())
+  auto         AutoAbate?
+}
+
+model AutoAbate {
+  id            String        @id @default(cuid())
+  numero        String        @unique
+  data          DateTime      @default(now())
+  proposta      PropostaAbate @relation(fields: [propostaId], references: [id])
+  propostaId    String        @unique
+  aprovadoPor   User          @relation(fields: [aprovadoPorId], references: [id])
+  aprovadoPorId String
+}
+
+model LogAuditoria {
+  id          String   @id @default(cuid())
+  quando      DateTime @default(now())
+  quemNome    String
+  quemPerfil  String
+  accao       String
+  titularNome String?
+  ip          String?
+}
+
+model RespostaQuestionario {
+  id          String   @id @default(cuid())
+  autor       User     @relation(fields: [autorId], references: [id])
+  autorId     String
+  problema    String
+  equipamento String?
+  ferramenta  String?
+  automatizar String?
+  formacao    String?
+  criadoEm    DateTime @default(now())
+}
+
+model Notificacao {
+  id       String   @id @default(cuid())
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  titulo   String
+  corpo    String?
+  lida     Boolean  @default(false)
+  criadoEm DateTime @default(now())
+}

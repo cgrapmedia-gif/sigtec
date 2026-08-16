@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-papel text-preto antialiased;
+}
+
+.cartao {
+  @apply bg-white border border-linha rounded-xl shadow-cartao p-5;
+}
+.pill {
+  @apply inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap;
+}
+.btn {
+  @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition hover:brightness-110 disabled:opacity-50;
+}
+.btn-primario { @apply btn bg-vermelho text-white; }
+.btn-secundario { @apply btn bg-preto text-white; }
+.btn-dourado { @apply btn bg-dourado text-white; }
+.btn-contorno { @apply btn bg-white border border-linha; }
+.campo-rotulo { @apply block text-[11.5px] font-semibold uppercase tracking-wide text-cinza mb-1; }
+.campo-input { @apply w-full px-3 py-2.5 border border-linha rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-dourado; }
+.th { @apply text-left text-[10.5px] uppercase tracking-wider text-cinza font-semibold px-2.5 py-2 border-b-2 border-linha; }
+.td { @apply px-2.5 py-2.5 border-b border-linha align-middle text-[13px]; }
