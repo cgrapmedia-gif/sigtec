@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -11,10 +13,14 @@ import { AuditoriaModule } from './auditoria/auditoria.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { QuestionarioModule } from './questionario/questionario.module';
 import { NotificacoesModule } from './notificacoes/notificacoes.module';
+import { RelatoriosModule } from './relatorios/relatorios.module';
+import { ConhecimentoModule } from './conhecimento/conhecimento.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    // Protecção contra abuso: 120 pedidos por minuto por IP
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 120 }]),
     PrismaModule,
     AuthModule,
     UsersModule,
@@ -24,8 +30,11 @@ import { NotificacoesModule } from './notificacoes/notificacoes.module';
     AbateModule,
     AuditoriaModule,
     NotificacoesModule,
+    RelatoriosModule,
+    ConhecimentoModule,
     DashboardModule,
     QuestionarioModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

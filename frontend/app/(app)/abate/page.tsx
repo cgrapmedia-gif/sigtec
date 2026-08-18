@@ -17,6 +17,7 @@ export default function AbatePage() {
   const [autos, setAutos] = useState<any[]>([]);
   const [proposta, setProposta] = useState<any>(null); // activo seleccionado para iniciar processo
   const [aRejeitar, setARejeitar] = useState<any>(null);
+  const [seleccionados, setSeleccionados] = useState<string[]>([]);
   const [msg, setMsg] = useState('');
 
   const carregar = useCallback(() => {
@@ -60,7 +61,15 @@ export default function AbatePage() {
       {msg && <p className="text-vermelho text-sm">{msg}</p>}
 
       <section className="cartao">
-        <h2 className="text-[15px] font-bold mb-3">Candidatos a abate</h2>
+        <div className="flex items-center gap-3 flex-wrap mb-3">
+          <h2 className="text-[15px] font-bold flex-1">Candidatos a abate</h2>
+          {seleccionados.length > 1 && ['ADMIN', 'TECNICO'].includes(user?.perfil) && (
+            <button className="btn-primario !px-3 !py-1.5 !text-xs"
+              onClick={() => setProposta(candidatos.filter((c) => seleccionados.includes(c.id)))}>
+              Processo conjunto ({seleccionados.length} equipamentos)
+            </button>
+          )}
+        </div>
         {candidatos.length === 0 ? (
           <p className="text-sm text-cinza">Sem novos candidatos — todos os obsoletos identificados já têm processo em curso.</p>
         ) : (
@@ -68,12 +77,18 @@ export default function AbatePage() {
             <tbody>
               {candidatos.map((a) => (
                 <tr key={a.id}>
-                  <td className="td font-mono text-xs font-semibold">{a.numInventario}</td>
+                  <td className="td">
+                    {['ADMIN', 'TECNICO'].includes(user?.perfil) && (
+                      <input type="checkbox" className="mr-2 align-middle" checked={seleccionados.includes(a.id)}
+                        onChange={(e) => setSeleccionados((s) => e.target.checked ? [...s, a.id] : s.filter((x) => x !== a.id))} />
+                    )}
+                    <span className="font-mono text-xs font-semibold align-middle">{a.numInventario}</span>
+                  </td>
                   <td className="td"><span className="font-medium">{a.marca} {a.modelo}</span><span className="block text-[11px] text-cinza">{a.categoria} · {a.localizacao}</span></td>
                   <td className="td">{a.motivos.map((m: string) => <span key={m} className="pill bg-linha text-cinza mr-1 mb-1">{m}</span>)}</td>
                   <td className="td text-right">
                     {['ADMIN', 'TECNICO'].includes(user?.perfil)
-                      ? <button className="btn-secundario !px-3 !py-1.5 !text-xs" onClick={() => setProposta(a)}>Iniciar processo</button>
+                      ? <button className="btn-secundario !px-3 !py-1.5 !text-xs" onClick={() => setProposta([a])}>Iniciar processo</button>
                       : <span className="text-[11px] text-cinza">Aguarda proposta</span>}
                   </td>
                 </tr>
@@ -143,28 +158,34 @@ export default function AbatePage() {
         <p className="text-xs text-cinza mt-3">Os equipamentos abatidos permanecem no histórico do inventário para auditoria patrimonial — nunca são eliminados.</p>
       </section>
 
-      {proposta && <NovaProposta activo={proposta} fechar={() => setProposta(null)} feito={() => { setProposta(null); carregar(); }} />}
+      {proposta && <NovaProposta activos={proposta} fechar={() => setProposta(null)} feito={() => { setProposta(null); setSeleccionados([]); carregar(); }} />}
       {aRejeitar && <ModalRejeicao proposta={aRejeitar} fechar={() => setARejeitar(null)} feito={() => { setARejeitar(null); carregar(); }} />}
     </div>
   );
 }
 
-function NovaProposta({ activo, fechar, feito }: any) {
+function NovaProposta({ activos, fechar, feito }: any) {
+  const lista: any[] = Array.isArray(activos) ? activos : [activos];
+  const algumComDisco = lista.some((a) => a.temDisco);
+  const primeiro = lista[0];
   const [parecer, setParecer] = useState(
-    activo.custoReparacao && activo.valorSubstituicao
-      ? `Reparação estimada em ${Number(activo.custoReparacao)}€ (${Math.round((Number(activo.custoReparacao) / Number(activo.valorSubstituicao)) * 100)}% do valor de substituição). Recomenda-se abate.`
+    lista.length === 1 && primeiro.custoReparacao && primeiro.valorSubstituicao
+      ? `Reparação estimada em ${Number(primeiro.custoReparacao)}€ (${Math.round((Number(primeiro.custoReparacao) / Number(primeiro.valorSubstituicao)) * 100)}% do valor de substituição). Recomenda-se abate.`
       : '',
   );
   const [destino, setDestino] = useState('Reciclagem certificada (REEE)');
   const [sanitizacao, setSanitizacao] = useState(
-    activo.temDisco ? 'Obrigatória — wipe certificado (DoD 5220.22-M) antes do abate' : 'Não aplicável — sem suporte de armazenamento',
+    algumComDisco ? 'Obrigatória — wipe certificado (DoD 5220.22-M) antes do abate' : 'Não aplicável — sem suporte de armazenamento',
   );
   const [erro, setErro] = useState('');
 
   async function criar() {
     if (parecer.trim().length < 10) { setErro('O parecer técnico é obrigatório (mín. 10 caracteres).'); return; }
     try {
-      await api('/abate/propostas', { method: 'POST', body: JSON.stringify({ activoIds: [activo.id], parecer, destino, sanitizacao }) });
+      await api('/abate/propostas', {
+        method: 'POST',
+        body: JSON.stringify({ activoIds: lista.map((a) => a.id), parecer, destino, sanitizacao }),
+      });
       feito();
     } catch (e: any) { setErro(e.message); }
   }
@@ -173,12 +194,23 @@ function NovaProposta({ activo, fechar, feito }: any) {
     <div className="fixed inset-0 bg-preto/55 z-50 flex items-start justify-center p-4 pt-12 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && fechar()}>
       <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl">
         <div className="flex items-center px-5 py-4 border-b border-linha">
-          <h3 className="font-bold flex-1">Iniciar processo de abate — {activo.numInventario}</h3>
+          <h3 className="font-bold flex-1">
+            Iniciar processo de abate — {lista.length === 1 ? primeiro.numInventario : `${lista.length} equipamentos`}
+          </h3>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>
         </div>
         <div className="p-5">
           <p className="text-[13px] bg-gradient-to-br from-[#FDF9EE] to-[#F7EFD8] border border-douradoClaro rounded-lg p-3 mb-4">
-            <b>Motivo pré-preenchido pela análise automática:</b> {activo.motivos.join(' · ')}
+            <b>Motivo pré-preenchido pela análise automática:</b>
+            {lista.length === 1 ? (
+              <> {primeiro.motivos.join(' · ')}</>
+            ) : (
+              <ul className="mt-1.5 space-y-1">
+                {lista.map((a) => (
+                  <li key={a.id}><span className="font-mono text-[12px]">{a.numInventario}</span> — {a.motivos.join(' · ')}</li>
+                ))}
+              </ul>
+            )}
           </p>
           <div className="mb-3.5">
             <label className="campo-rotulo">Parecer técnico</label>
@@ -196,7 +228,7 @@ function NovaProposta({ activo, fechar, feito }: any) {
             <div>
               <label className="campo-rotulo">Sanitização de dados</label>
               <select className="campo-input" value={sanitizacao} onChange={(e) => setSanitizacao(e.target.value)}>
-                {activo.temDisco ? (
+                {algumComDisco ? (
                   <>
                     <option>Obrigatória — wipe certificado (DoD 5220.22-M) antes do abate</option>
                     <option>Obrigatória — destruição física do disco</option>

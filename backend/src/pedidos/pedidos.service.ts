@@ -3,6 +3,7 @@ import { EstadoPedido, Prioridade } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
 import { NotificacoesService } from '../notificacoes/notificacoes.service';
+import { triagem } from '../ia/regras';
 
 const SLA_HORAS: Record<Prioridade, number> = { CRITICA: 4, ALTA: 8, MEDIA: 24, BAIXA: 72 };
 
@@ -15,9 +16,9 @@ export class PedidosService {
   ) {}
 
   /** Funcionarios veem apenas os proprios pedidos; gestores veem todos */
-  listar(user: { id: string; perfil: string }) {
+  async listar(user: { id: string; perfil: string }) {
     const filtro = user.perfil === 'FUNCIONARIO' ? { autorId: user.id } : {};
-    return this.prisma.pedido.findMany({
+    const pedidos = await this.prisma.pedido.findMany({
       where: filtro,
       include: {
         autor: { select: { nome: true } },
@@ -26,6 +27,43 @@ export class PedidosService {
       },
       orderBy: { criadoEm: 'desc' },
     });
+    return pedidos.map((p) => ({ ...p, sla: this.calcularSla(p) }));
+  }
+
+  /** Estado do SLA: prazo, horas restantes e se foi violado (RF-HD-04) */
+  private calcularSla(p: { criadoEm: Date; fechadoEm: Date | null; slaHoras: number; estado: string }) {
+    const limite = new Date(new Date(p.criadoEm).getTime() + p.slaHoras * 3600000);
+    const referencia = p.fechadoEm ? new Date(p.fechadoEm) : new Date();
+    const horasRestantes = (limite.getTime() - referencia.getTime()) / 3600000;
+    const concluido = !!p.fechadoEm;
+    return {
+      limite,
+      horasRestantes: Math.round(horasRestantes * 10) / 10,
+      violado: horasRestantes < 0,
+      emRisco: !concluido && horasRestantes >= 0 && horasRestantes <= p.slaHoras * 0.25,
+      concluido,
+    };
+  }
+
+  /** Triagem automática — sugestão explicável de prioridade e categoria */
+  sugerirTriagem(assunto: string, descricao?: string) {
+    return triagem(assunto, descricao);
+  }
+
+  /** Avaliação de satisfação pelo requerente, após resolução (RF-HD-09) */
+  async avaliar(id: string, nota: number, comentario: string | undefined, user: { id: string; nome: string; perfil: string }) {
+    const p = await this.prisma.pedido.findUniqueOrThrow({ where: { id } });
+    if (p.autorId !== user.id) throw new ForbiddenException('Só o requerente pode avaliar o pedido.');
+    if (!['RESOLVIDO', 'FECHADO'].includes(p.estado)) throw new ForbiddenException('Só é possível avaliar pedidos resolvidos.');
+    if (nota < 1 || nota > 5) throw new ForbiddenException('A avaliação deve estar entre 1 e 5.');
+    const actualizado = await this.prisma.pedido.update({
+      where: { id },
+      data: { satisfacao: nota, satisfacaoComentario: comentario || null },
+    });
+    await this.prisma.eventoPedido.create({
+      data: { pedidoId: id, descricao: `Avaliação do requerente: ${nota}/5${comentario ? ` — «${comentario}»` : ''}`, autorId: user.id },
+    });
+    return actualizado;
   }
 
   async obter(id: string, user: { id: string; nome: string; perfil: string }) {
@@ -46,7 +84,7 @@ export class PedidosService {
     if (p.autor.id !== user.id) {
       await this.auditoria.registar({ quemNome: user.nome, quemPerfil: user.perfil, accao: `Consultou o pedido #${p.numero}`, titularNome: p.autor.nome });
     }
-    return p;
+    return { ...p, sla: this.calcularSla(p) };
   }
 
   /** Once-Only: autor, localizacao e SLA sao derivados pelo sistema */

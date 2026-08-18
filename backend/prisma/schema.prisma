@@ -78,6 +78,7 @@ model User {
   autosAprovados    AutoAbate[]
   respostas         RespostaQuestionario[]
   notificacoes      Notificacao[]
+  artigos           ArtigoConhecimento[]
 }
 
 model Activo {
@@ -134,6 +135,8 @@ model Pedido {
   activoId   String?
   criadoEm   DateTime     @default(now())
   fechadoEm  DateTime?
+  satisfacao Int?
+  satisfacaoComentario String?
 
   eventos EventoPedido[]
 }
@@ -160,6 +163,7 @@ model OrdemManutencao {
   concluidaEm  DateTime?
   concluidaPor String?
   observacoes  String?
+  recorrenciaMeses Int?
 }
 
 model PropostaAbate {
@@ -186,6 +190,20 @@ model AutoAbate {
   propostaId    String        @unique
   aprovadoPor   User          @relation(fields: [aprovadoPorId], references: [id])
   aprovadoPorId String
+}
+
+model ArtigoConhecimento {
+  id            String   @id @default(cuid())
+  titulo        String
+  categoria     String
+  corpo         String
+  palavrasChave String?
+  publicado     Boolean  @default(true)
+  visualizacoes Int      @default(0)
+  autor         User     @relation(fields: [autorId], references: [id])
+  autorId       String
+  criadoEm      DateTime @default(now())
+  actualizadoEm DateTime @updatedAt
 }
 
 model LogAuditoria {

@@ -38,6 +38,16 @@ export class PedidosController {
     return this.svc.actualizarEstado(id, dto, user);
   }
 
+  @Post('triagem')
+  triagem(@Body() dto: { assunto: string; descricao?: string }) {
+    return this.svc.sugerirTriagem(dto.assunto, dto.descricao);
+  }
+
+  @Post(':id/avaliacao')
+  avaliar(@Param('id') id: string, @Body() dto: { nota: number; comentario?: string }, @UserActual() user: any) {
+    return this.svc.avaliar(id, Number(dto.nota), dto.comentario, user);
+  }
+
   @Post(':id/comentarios')
   comentar(@Param('id') id: string, @Body('texto') texto: string, @UserActual() user: any) {
     return this.svc.comentar(id, texto, user);

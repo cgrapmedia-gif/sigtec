@@ -6,9 +6,13 @@ import { fmtDataHora } from '@/lib/formato';
 export default function TransparenciaPage() {
   const user = typeof window !== 'undefined' ? getUser() : null;
   const [acessos, setAcessos] = useState<any[]>([]);
+  const [kpi, setKpi] = useState<any>(null);
   const [msg, setMsg] = useState('');
 
-  useEffect(() => { api('/auditoria').then(setAcessos).catch((e) => setMsg(e.message)); }, []);
+  useEffect(() => {
+    api('/auditoria').then(setAcessos).catch((e) => setMsg(e.message));
+    api('/relatorios/publico').then(setKpi).catch(() => {});
+  }, []);
 
   const funcionario = user?.perfil === 'FUNCIONARIO';
 
@@ -48,22 +52,26 @@ export default function TransparenciaPage() {
           <div className="cartao">
             <h2 className="text-[15px] font-bold mb-3">Painel público do serviço de informática</h2>
             <div className="grid grid-cols-2 gap-3">
-              <Kpi rotulo="Pedidos resolvidos 2026" valor="118" cor="text-verde" />
-              <Kpi rotulo="Tempo médio" valor="7,4h" />
-              <Kpi rotulo="SLA cumprido" valor="92%" cor="text-verde" />
-              <Kpi rotulo="Satisfação" valor="4,6/5" cor="text-azul" />
+              <Kpi rotulo="Pedidos resolvidos este ano" valor={kpi ? String(kpi.resolvidosAno) : '…'} cor="text-verde" />
+              <Kpi rotulo="Pedidos registados" valor={kpi ? String(kpi.pedidosDigitaisAno) : '…'} />
+              <Kpi rotulo="Autos de abate digitais" valor={kpi ? String(kpi.autosDigitais) : '…'} cor="text-verde" />
+              <Kpi rotulo="Satisfação" valor={kpi?.satisfacaoMedia ? `${kpi.satisfacaoMedia}/5` : '—'} cor="text-azul" />
             </div>
+            <p className="text-[11px] text-cinza mt-3">Valores calculados em tempo real a partir dos registos do sistema.</p>
           </div>
           <div className="cartao">
             <h2 className="text-[15px] font-bold mb-3">Digitalização do Consulado</h2>
             <table className="w-full text-[13px]">
               <tbody>
-                <tr><td className="td font-medium">Pedidos digitais vs. informais</td><td className="td text-right font-mono font-bold text-verde">87%</td></tr>
-                <tr><td className="td font-medium">Folhas de papel evitadas (2026)</td><td className="td text-right font-mono font-bold">1 240</td></tr>
-                <tr><td className="td font-medium">Tempo administrativo poupado</td><td className="td text-right font-mono font-bold">63h/mês</td></tr>
-                <tr><td className="td font-medium">Documentos nascidos digitais</td><td className="td text-right font-mono font-bold text-verde">100%</td></tr>
+                <tr><td className="td font-medium">Processos nascidos digitais</td><td className="td text-right font-mono font-bold text-verde">{kpi ? `${kpi.percentagemDigital}%` : '…'}</td></tr>
+                <tr><td className="td font-medium">Folhas de papel evitadas</td><td className="td text-right font-mono font-bold">{kpi ? kpi.folhasEvitadas.toLocaleString('pt-PT') : '…'}</td></tr>
+                <tr><td className="td font-medium">Tempo administrativo poupado</td><td className="td text-right font-mono font-bold">{kpi ? `${kpi.horasPoupadas}h` : '…'}</td></tr>
+                <tr><td className="td font-medium">Registos de auditoria</td><td className="td text-right font-mono font-bold">{kpi ? kpi.registosAuditoria.toLocaleString('pt-PT') : '…'}</td></tr>
               </tbody>
             </table>
+            <p className="text-[11px] text-cinza mt-2">
+              Estimativa conservadora: 2 folhas evitadas por processo digital, 4 por auto de abate; 12 minutos poupados por processo.
+            </p>
           </div>
         </section>
       </div>

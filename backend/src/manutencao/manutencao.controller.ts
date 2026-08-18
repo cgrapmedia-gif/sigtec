@@ -16,6 +16,9 @@ export class ManutencaoController {
   @Post()
   criar(@Body() dto: any) { return this.svc.criar(dto); }
 
+  @Post('gerar-rotinas')
+  gerarRotinas(@UserActual() user: any) { return this.svc.gerarRotinas(user.nome); }
+
   @Patch(':id/concluir')
   concluir(@Param('id') id: string, @Body('observacoes') obs: string, @UserActual() user: any) {
     return this.svc.concluir(id, user.nome, obs);

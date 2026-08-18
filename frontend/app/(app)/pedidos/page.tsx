@@ -15,6 +15,7 @@ export default function PedidosPage() {
   const [filtroEstado, setFiltroEstado] = useState('');
   const [novo, setNovo] = useState(false);
   const [detalhe, setDetalhe] = useState<any>(null);
+  const [aAvaliar, setAAvaliar] = useState<any>(null);
   const [msg, setMsg] = useState('');
 
   const carregar = useCallback(() => {
@@ -66,9 +67,20 @@ export default function PedidosPage() {
                   <span className="font-medium">{p.assunto}</span>
                   <span className="block text-[11px] text-cinza">{p.categoria} · {p.autor?.nome}</span>
                 </td>
-                <td className="td"><span className={`pill ${PRIORIDADE[p.prioridade].classe}`}>{PRIORIDADE[p.prioridade].rotulo}</span> <span className="font-mono text-[11px] text-cinza">{p.slaHoras}h</span></td>
+                <td className="td">
+                  <span className={`pill ${PRIORIDADE[p.prioridade].classe}`}>{PRIORIDADE[p.prioridade].rotulo}</span>
+                  <span className="block mt-1"><EstadoSla sla={p.sla} horas={p.slaHoras} /></span>
+                </td>
                 <td className="td"><span className={`pill ${ESTADO_PEDIDO[p.estado].classe}`}>{ESTADO_PEDIDO[p.estado].rotulo}</span></td>
-                <td className="td font-mono text-xs">{fmtData(p.criadoEm)}</td>
+                <td className="td font-mono text-xs">
+                  {fmtData(p.criadoEm)}
+                  {['RESOLVIDO', 'FECHADO'].includes(p.estado) && p.autor?.nome === user?.nome && (
+                    p.satisfacao
+                      ? <span className="block text-[11px] text-verde font-sans font-semibold mt-1">★ {p.satisfacao}/5</span>
+                      : <button className="block text-[11px] text-vermelho font-sans font-semibold mt-1 hover:underline"
+                          onClick={(e) => { e.stopPropagation(); setAAvaliar(p); }}>Avaliar atendimento</button>
+                  )}
+                </td>
               </tr>
             ))}
             {lista.length === 0 && <tr><td colSpan={5} className="td text-center text-cinza py-6">Sem pedidos para mostrar. Abra o primeiro pedido para começar o registo.</td></tr>}
@@ -78,6 +90,7 @@ export default function PedidosPage() {
 
       {novo && <NovoPedido activos={activos} user={user} fechar={() => setNovo(false)} feito={() => { setNovo(false); carregar(); }} />}
       {detalhe && <DetalhePedido pedido={detalhe} podeGerir={podeGerir} fechar={() => setDetalhe(null)} feito={() => { setDetalhe(null); carregar(); }} />}
+      {aAvaliar && <ModalAvaliacao pedido={aAvaliar} fechar={() => setAAvaliar(null)} feito={() => { setAAvaliar(null); carregar(); }} />}
     </div>
   );
 }
@@ -89,6 +102,21 @@ function NovoPedido({ activos, user, fechar, feito }: any) {
   const [activoId, setActivoId] = useState('');
   const [descricao, setDescricao] = useState('');
   const [erro, setErro] = useState('');
+  const [sugestao, setSugestao] = useState<any>(null);
+  const [prioridadeManual, setPrioridadeManual] = useState(false);
+
+  // Triagem automática: sugere prioridade e categoria a partir do texto escrito
+  useEffect(() => {
+    if (assunto.trim().length < 8) { setSugestao(null); return; }
+    const t = setTimeout(async () => {
+      try {
+        const s = await api('/pedidos/triagem', { method: 'POST', body: JSON.stringify({ assunto, descricao }) });
+        setSugestao(s);
+        if (!prioridadeManual) { setPrioridade(s.prioridade); setCategoria(s.categoria); }
+      } catch { /* a triagem é auxiliar: se falhar, o utilizador escolhe */ }
+    }, 600);
+    return () => clearTimeout(t);
+  }, [assunto, descricao, prioridadeManual]);
 
   async function submeter() {
     if (!assunto.trim()) { setErro('Indique o assunto do pedido.'); return; }
@@ -117,6 +145,12 @@ function NovoPedido({ activos, user, fechar, feito }: any) {
       <div className="mb-3.5">
         <label className="campo-rotulo">Assunto do pedido</label>
         <input className="campo-input" value={assunto} onChange={(e) => setAssunto(e.target.value)} placeholder="Ex.: Computador da Secretaria está lento" />
+        {sugestao && (
+          <p className="text-[11.5px] text-dourado mt-1.5 bg-[#FDFBF3] border border-douradoClaro rounded-lg p-2">
+            🤖 <b>Triagem automática:</b> {PRIORIDADE[sugestao.prioridade].rotulo} · {sugestao.categoria} — {sugestao.justificacao}.
+            Pode alterar se discordar.
+          </p>
+        )}
       </div>
       <div className="grid sm:grid-cols-2 gap-3.5 mb-3.5">
         <div>
@@ -127,7 +161,7 @@ function NovoPedido({ activos, user, fechar, feito }: any) {
         </div>
         <div>
           <label className="campo-rotulo">Prioridade</label>
-          <select className="campo-input" value={prioridade} onChange={(e) => setPrioridade(e.target.value)}>
+          <select className="campo-input" value={prioridade} onChange={(e) => { setPrioridade(e.target.value); setPrioridadeManual(true); }}>
             <option value="BAIXA">Baixa (SLA 72h)</option><option value="MEDIA">Média (SLA 24h)</option>
             <option value="ALTA">Alta (SLA 8h)</option><option value="CRITICA">Crítica (SLA 4h)</option>
           </select>
@@ -246,5 +280,63 @@ function Modal({ titulo, children, rodape, fechar }: any) {
         <div className="px-5 py-4 border-t border-linha flex justify-end gap-2.5 flex-wrap">{rodape}</div>
       </div>
     </div>
+  );
+}
+
+
+/** Indicador do estado de SLA de um pedido */
+function EstadoSla({ sla, horas }: { sla: any; horas: number }) {
+  if (!sla) return <span className="font-mono text-[11px] text-cinza">{horas}h</span>;
+  if (sla.concluido) {
+    return sla.violado
+      ? <span className="pill bg-vermelho/10 text-vermelho">SLA excedido</span>
+      : <span className="pill bg-verde/10 text-verde">SLA cumprido</span>;
+  }
+  if (sla.violado) return <span className="pill bg-vermelho text-white">SLA excedido</span>;
+  if (sla.emRisco) return <span className="pill bg-ambar/10 text-ambar">Faltam {sla.horasRestantes}h</span>;
+  return <span className="font-mono text-[11px] text-cinza">Faltam {sla.horasRestantes}h de {horas}h</span>;
+}
+
+/** Avaliação de satisfação pelo requerente */
+function ModalAvaliacao({ pedido, fechar, feito }: any) {
+  const [nota, setNota] = useState(0);
+  const [comentario, setComentario] = useState('');
+  const [erro, setErro] = useState('');
+  const [aGuardar, setAGuardar] = useState(false);
+
+  async function enviar() {
+    if (nota < 1) { setErro('Seleccione uma classificação de 1 a 5.'); return; }
+    setAGuardar(true);
+    try {
+      await api(`/pedidos/${pedido.id}/avaliacao`, { method: 'POST', body: JSON.stringify({ nota, comentario }) });
+      feito();
+    } catch (e: any) { setErro(e.message); } finally { setAGuardar(false); }
+  }
+
+  return (
+    <Modal titulo={`Avaliar o atendimento — #${pedido.numero}`} fechar={fechar} rodape={
+      <>
+        <button className="btn-contorno" onClick={fechar}>Agora não</button>
+        <button className="btn-primario" onClick={enviar} disabled={aGuardar}>{aGuardar ? 'A enviar…' : 'Enviar avaliação'}</button>
+      </>
+    }>
+      <p className="text-[13px] mb-4">Como classifica a resolução de <b>{pedido.assunto}</b>?</p>
+      <div className="flex gap-2 mb-4">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button key={n} onClick={() => setNota(n)}
+            className={`w-12 h-12 rounded-xl border text-xl transition ${nota >= n ? 'bg-dourado text-white border-dourado' : 'border-linha hover:border-dourado'}`}>
+            ★
+          </button>
+        ))}
+        <span className="self-center text-[13px] text-cinza ml-2">
+          {nota === 0 ? '' : ['Muito insatisfeito', 'Insatisfeito', 'Razoável', 'Satisfeito', 'Muito satisfeito'][nota - 1]}
+        </span>
+      </div>
+      <label className="campo-rotulo">Comentário (opcional)</label>
+      <textarea className="campo-input min-h-[70px]" value={comentario} onChange={(e) => setComentario(e.target.value)}
+        placeholder="O que correu bem ou o que poderia melhorar?" />
+      <p className="text-[11.5px] text-cinza mt-2">A avaliação alimenta o painel público de indicadores do serviço.</p>
+      {erro && <p className="text-vermelho text-sm mt-2">{erro}</p>}
+    </Modal>
   );
 }

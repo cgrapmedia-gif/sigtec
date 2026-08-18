@@ -115,6 +115,49 @@ async function main() {
     }});
   }
 
+  // Base de conhecimento inicial
+  if ((await prisma.artigoConhecimento.count()) === 0) {
+    await prisma.artigoConhecimento.createMany({
+      data: [
+        {
+          titulo: 'Impressora encrava papel com frequência',
+          categoria: 'Impressão',
+          palavrasChave: 'encravamento, papel, jam, fusor, rolos',
+          autorId: tecnico.id,
+          corpo: '1. Desligue a impressora e aguarde 5 minutos.\n2. Abra as tampas traseira e frontal e retire o papel encravado puxando sempre no sentido do percurso do papel, nunca ao contrário.\n3. Verifique se o papel está húmido ou empenado — no Porto, a humidade é causa frequente. Guarde as resmas fechadas e fora do chão.\n4. Limpe os rolos de alimentação com um pano ligeiramente humedecido em álcool isopropílico.\n5. Se o encravamento persistir mais de três vezes por semana, abra pedido: pode ser desgaste do fusor, que é critério de análise de obsolescência.',
+        },
+        {
+          titulo: 'Leitor biométrico não recolhe impressões digitais',
+          categoria: 'Sistema biométrico',
+          palavrasChave: 'dermalog, biométrico, impressão digital, sensor, visto',
+          autorId: tecnico.id,
+          corpo: '1. Limpe o sensor com pano de microfibra seco — nunca use álcool directamente sobre o vidro.\n2. Peça ao utente para limpar e secar os dedos; dedos muito secos podem ser humedecidos ligeiramente.\n3. Confirme que o cabo USB está ligado directamente ao computador e não a um hub.\n4. Reinicie o serviço do leitor e, se necessário, o computador.\n5. Se o problema persistir num único posto, troque o leitor com outro balcão para isolar se a falha é do equipamento ou do posto — e registe no pedido qual foi o resultado.',
+        },
+        {
+          titulo: 'Sem acesso à pasta partilhada da rede',
+          categoria: 'Rede',
+          palavrasChave: 'pasta partilhada, rede, permissões, unidade, servidor',
+          autorId: admin.id,
+          corpo: '1. Verifique se outros colegas do mesmo departamento têm acesso — se ninguém tiver, é falha do servidor.\n2. Confirme se a unidade de rede aparece no Explorador de Ficheiros; se estiver com cruz vermelha, faça duplo clique para reconectar.\n3. Termine sessão e volte a entrar no computador: as permissões são aplicadas no início de sessão.\n4. Se continuar sem acesso, abra pedido indicando o nome exacto da pasta e a mensagem de erro apresentada.',
+        },
+        {
+          titulo: 'Procedimento de abate de equipamento obsoleto',
+          categoria: 'Procedimentos',
+          palavrasChave: 'abate, obsolescência, auto, REEE, sanitização, direcção',
+          autorId: admin.id,
+          corpo: 'O abate segue quatro fases obrigatórias no SIGTEC:\n\n1. IDENTIFICAÇÃO — o sistema assinala automaticamente como candidato qualquer equipamento que cumpra 2 ou mais critérios: idade acima do ciclo de vida da categoria, garantia expirada, cinco ou mais falhas em seis meses, ou custo de reparação superior a 50% do valor de substituição.\n\n2. PARECER TÉCNICO — o técnico avalia a viabilidade de reparação, define o destino (reciclagem certificada REEE, doação ou destruição segura) e indica o procedimento de sanitização de dados quando o equipamento tem suporte de armazenamento.\n\n3. SUBMISSÃO — o Administrador submete a proposta à Direcção.\n\n4. DECISÃO — a Direcção aprova, e o sistema emite o Auto de Abate numerado em PDF; ou rejeita com fundamentação, ficando o equipamento em inventário.\n\nNota: equipamentos abatidos nunca são eliminados do sistema — passam ao estado ABATIDO e permanecem para auditoria patrimonial.',
+        },
+        {
+          titulo: 'Computador lento no arranque',
+          categoria: 'Hardware',
+          palavrasChave: 'lento, arranque, disco, memória, SSD',
+          autorId: tecnico.id,
+          corpo: '1. Verifique quantos programas arrancam com o sistema (Gestor de Tarefas → separador Arranque) e desactive os desnecessários.\n2. Confirme o espaço livre no disco: abaixo de 15% da capacidade, o desempenho degrada-se muito.\n3. Verifique a saúde do disco. Discos mecânicos com mais de 5 anos são a causa mais frequente e a substituição por SSD resolve na maioria dos casos.\n4. Se o equipamento tiver mais de 5 anos (ciclo de vida dos computadores), registe as falhas no SIGTEC: a acumulação alimenta a análise de obsolescência e justifica a substituição perante a Direcção.',
+        },
+      ],
+    });
+  }
+
   console.log('Seed concluído. Contas (password: sigtec2026):');
   console.log('  Admin:       c.miranda@consuladoporto.gov.ao');
   console.log('  Técnico:     r.sousa@consuladoporto.gov.ao');
