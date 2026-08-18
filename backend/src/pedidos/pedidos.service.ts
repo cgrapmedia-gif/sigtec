@@ -2,12 +2,17 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { EstadoPedido, Prioridade } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
+import { NotificacoesService } from '../notificacoes/notificacoes.service';
 
 const SLA_HORAS: Record<Prioridade, number> = { CRITICA: 4, ALTA: 8, MEDIA: 24, BAIXA: 72 };
 
 @Injectable()
 export class PedidosService {
-  constructor(private prisma: PrismaService, private auditoria: AuditoriaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditoria: AuditoriaService,
+    private notificacoes: NotificacoesService,
+  ) {}
 
   /** Funcionarios veem apenas os proprios pedidos; gestores veem todos */
   listar(user: { id: string; perfil: string }) {
@@ -58,11 +63,18 @@ export class PedidosService {
       },
     });
     await this.auditoria.registar({ quemNome: user.nome, quemPerfil: user.perfil, accao: `Abriu o pedido #${numero}`, titularNome: user.nome });
+    // Serviço proactivo: a equipa técnica é avisada sem depender de contacto informal
+    await this.notificacoes.criarParaPerfis(
+      ['ADMIN', 'TECNICO'],
+      `Novo pedido #${numero} (${dto.prioridade})`,
+      `${dto.assunto} — aberto por ${user.nome}. SLA: ${SLA_HORAS[dto.prioridade]}h.`,
+      '/pedidos',
+    );
     return p;
   }
 
   async actualizarEstado(id: string, dto: { estado: EstadoPedido; nota?: string; interno?: boolean }, user: { id: string; nome: string; perfil: string }) {
-    const p = await this.prisma.pedido.findUniqueOrThrow({ where: { id }, include: { autor: { select: { nome: true } } } });
+    const p = await this.prisma.pedido.findUniqueOrThrow({ where: { id }, include: { autor: { select: { id: true, nome: true } } } });
     const dados: any = { estado: dto.estado };
     if (!p.tecnicoId) dados.tecnicoId = user.id;
     if (['RESOLVIDO', 'FECHADO'].includes(dto.estado)) dados.fechadoEm = new Date();
@@ -70,6 +82,14 @@ export class PedidosService {
     await this.prisma.eventoPedido.create({ data: { pedidoId: id, descricao: `Estado alterado para «${dto.estado}» por ${user.nome}`, autorId: user.id } });
     if (dto.nota) await this.prisma.eventoPedido.create({ data: { pedidoId: id, descricao: dto.nota, interno: !!dto.interno, autorId: user.id } });
     await this.auditoria.registar({ quemNome: user.nome, quemPerfil: user.perfil, accao: `Actualizou o pedido #${p.numero} para «${dto.estado}»`, titularNome: p.autor.nome });
+    if (p.autorId !== user.id) {
+      await this.notificacoes.criar(
+        p.autorId,
+        `Pedido #${p.numero}: ${dto.estado}`,
+        dto.interno ? undefined : dto.nota,
+        '/pedidos',
+      );
+    }
     // Historico tecnico do activo alimentado automaticamente (RF-HD-07)
     if (p.activoId && dto.nota) {
       await this.prisma.eventoActivo.create({ data: { activoId: p.activoId, descricao: `[#${p.numero}] ${dto.nota}`, autor: user.nome, tipo: 'intervencao' } });

@@ -3,11 +3,17 @@ import { EstadoProposta } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
 import { PdfService } from '../pdf/pdf.service';
+import { NotificacoesService } from '../notificacoes/notificacoes.service';
 import { analisarObsolescencia } from '../activos/obsolescencia';
 
 @Injectable()
 export class AbateService {
-  constructor(private prisma: PrismaService, private auditoria: AuditoriaService, private pdf: PdfService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditoria: AuditoriaService,
+    private pdf: PdfService,
+    private notificacoes: NotificacoesService,
+  ) {}
 
   listarPropostas() {
     return this.prisma.propostaAbate.findMany({
@@ -41,12 +47,18 @@ export class AbateService {
       include: { activos: true },
     });
     await this.auditoria.registar({ quemNome: user.nome, quemPerfil: user.perfil, accao: `Criou a proposta de abate ${numero}` });
+    if (proposta.estado === EstadoProposta.AGUARDA_APROVACAO) {
+      await this.notificacoes.criarParaPerfis(['DIRECCAO'], `Proposta de abate ${numero} aguarda aprovação`, `${activos.length} equipamento(s) — parecer de ${user.nome}.`, '/abate');
+    } else {
+      await this.notificacoes.criarParaPerfis(['ADMIN'], `Proposta de abate ${numero} com parecer técnico`, `${activos.length} equipamento(s) — aguarda submissão à Direcção.`, '/abate');
+    }
     return proposta;
   }
 
   async submeterDireccao(id: string, user: { nome: string; perfil: string }) {
     const p = await this.prisma.propostaAbate.update({ where: { id }, data: { estado: EstadoProposta.AGUARDA_APROVACAO } });
     await this.auditoria.registar({ quemNome: user.nome, quemPerfil: user.perfil, accao: `Submeteu a proposta ${p.numero} à Direcção` });
+    await this.notificacoes.criarParaPerfis(['DIRECCAO'], `Proposta de abate ${p.numero} aguarda aprovação`, `Submetida por ${user.nome}.`, '/abate');
     return p;
   }
 
@@ -69,7 +81,40 @@ export class AbateService {
       ),
     ]);
     await this.auditoria.registar({ quemNome: user.nome, quemPerfil: user.perfil, accao: `Aprovou a proposta ${proposta.numero} e emitiu o ${numero}` });
+    await this.notificacoes.criarParaPerfis(
+      ['ADMIN', 'TECNICO'],
+      `Abate aprovado — ${numero} emitido`,
+      `A Direcção aprovou a proposta ${proposta.numero}. O Auto de Abate está disponível em PDF.`,
+      '/abate',
+    );
     return auto;
+  }
+
+  /** A Direcção pode devolver a proposta com fundamentação (RF-ABT-06) */
+  async rejeitar(id: string, motivo: string, user: { id: string; nome: string; perfil: string }) {
+    const proposta = await this.prisma.propostaAbate.findUnique({ where: { id } });
+    if (!proposta) throw new NotFoundException('Proposta não encontrada.');
+    if (proposta.estado !== EstadoProposta.AGUARDA_APROVACAO) {
+      throw new BadRequestException('A proposta não está em fase de aprovação.');
+    }
+    if (!motivo || motivo.trim().length < 10) {
+      throw new BadRequestException('Indique a fundamentação da rejeição (mín. 10 caracteres).');
+    }
+    const p = await this.prisma.propostaAbate.update({
+      where: { id },
+      data: { estado: EstadoProposta.REJEITADA, motivoRejeicao: motivo.trim() },
+    });
+    await this.auditoria.registar({
+      quemNome: user.nome, quemPerfil: user.perfil,
+      accao: `Rejeitou a proposta de abate ${proposta.numero}`,
+    });
+    await this.notificacoes.criarParaPerfis(
+      ['ADMIN', 'TECNICO'],
+      `Proposta de abate ${proposta.numero} rejeitada`,
+      motivo.trim(),
+      '/abate',
+    );
+    return p;
   }
 
   /** Geracao server-side do PDF do Auto de Abate */

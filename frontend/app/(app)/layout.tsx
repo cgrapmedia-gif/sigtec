@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { getToken, getUser, terminarSessao } from '@/lib/api';
+import Notificacoes from '@/components/Notificacoes';
 
 const NAV = [
   { href: '/painel', nome: 'Painel Geral', ico: '▦', grupo: 'Visão', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO', 'FUNCIONARIO'] },
@@ -11,7 +12,13 @@ const NAV = [
   { href: '/abate', nome: 'Obsolescência & Abate', ico: '♻', grupo: 'Operação', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO'] },
   { href: '/manutencao', nome: 'Manutenção Preventiva', ico: '⚙', grupo: 'Operação', perfis: ['ADMIN', 'TECNICO'] },
   { href: '/transparencia', nome: 'Transparência', ico: '◉', grupo: 'Governação Digital', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO', 'FUNCIONARIO'] },
+  { href: '/utilizadores', nome: 'Utilizadores', ico: '👤', grupo: 'Administração', perfis: ['ADMIN', 'DIRECCAO'] },
+  { href: '/conta', nome: 'A Minha Conta', ico: '🔑', grupo: 'Administração', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO', 'FUNCIONARIO'] },
 ];
+
+const ROTULO_PERFIL: Record<string, string> = {
+  FUNCIONARIO: 'Funcionário(a)', TECNICO: 'Técnico', ADMIN: 'Administrador', DIRECCAO: 'Direcção',
+};
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -21,8 +28,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!getToken()) { router.replace('/login'); return; }
-    setUser(getUser());
-  }, [router]);
+    const u = getUser();
+    setUser(u);
+    // Primeiro acesso ou password reposta: definir palavra-passe pessoal antes de usar o sistema
+    if (u?.precisaTrocarPassword && pathname !== '/conta') router.replace('/conta');
+  }, [router, pathname]);
 
   if (!user) return <div className="min-h-screen flex items-center justify-center text-cinza text-sm">A carregar sessão…</div>;
 
@@ -59,7 +69,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <span className="w-9 h-9 rounded-full bg-dourado text-white flex items-center justify-center font-bold text-[13px]">{iniciais}</span>
           <span className="flex-1 min-w-0">
             <b className="block text-[12.5px] truncate">{user.nome}</b>
-            <span className="text-[10.5px] text-[#A79F92]">{user.perfil === 'FUNCIONARIO' ? 'Funcionário(a)' : user.perfil === 'TECNICO' ? 'Técnico' : user.perfil === 'ADMIN' ? 'Administrador' : 'Direcção'}</span>
+            <span className="text-[10.5px] text-[#A79F92]">{ROTULO_PERFIL[user.perfil]}</span>
           </span>
           <button onClick={terminarSessao} className="text-[11px] border border-white/20 rounded-md px-2 py-1 hover:border-dourado">Sair</button>
         </div>
@@ -69,7 +79,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="flex items-center gap-3 py-3.5 border-b border-linha mb-5">
           <button className="md:hidden border border-linha rounded-lg px-2.5 py-1.5" onClick={() => setMenuAberto(!menuAberto)}>☰</button>
           <div className="flex-1" />
-          <span className="text-[11px] text-cinza">Sessão auditada · Data Tracker activo</span>
+          <span className="hidden sm:inline text-[11px] text-cinza">Sessão auditada · Data Tracker activo</span>
+          <Notificacoes />
         </header>
         {children}
       </main>

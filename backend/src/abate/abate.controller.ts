@@ -33,6 +33,11 @@ export class AbateController {
   @Patch('propostas/:id/aprovar') @Perfis('DIRECCAO')
   aprovar(@Param('id') id: string, @UserActual() user: any) { return this.svc.aprovar(id, user); }
 
+  @Patch('propostas/:id/rejeitar') @Perfis('DIRECCAO')
+  rejeitar(@Param('id') id: string, @Body('motivo') motivo: string, @UserActual() user: any) {
+    return this.svc.rejeitar(id, motivo, user);
+  }
+
   @Get('autos/:id/pdf') @Perfis('ADMIN', 'TECNICO', 'DIRECCAO')
   async pdf(@Param('id') id: string, @Res() res: Response) {
     const { numero, buffer } = await this.svc.pdfAuto(id);

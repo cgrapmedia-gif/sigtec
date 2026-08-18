@@ -16,6 +16,7 @@ export default function AbatePage() {
   const [propostas, setPropostas] = useState<any[]>([]);
   const [autos, setAutos] = useState<any[]>([]);
   const [proposta, setProposta] = useState<any>(null); // activo seleccionado para iniciar processo
+  const [aRejeitar, setARejeitar] = useState<any>(null);
   const [msg, setMsg] = useState('');
 
   const carregar = useCallback(() => {
@@ -84,10 +85,10 @@ export default function AbatePage() {
 
       <section className="cartao">
         <h2 className="text-[15px] font-bold mb-3">Processos em curso</h2>
-        {propostas.filter((p) => ['COM_PARECER', 'AGUARDA_APROVACAO'].includes(p.estado)).length === 0 && (
+        {propostas.filter((p) => ['COM_PARECER', 'AGUARDA_APROVACAO', 'REJEITADA'].includes(p.estado)).length === 0 && (
           <p className="text-sm text-cinza">Sem processos em curso.</p>
         )}
-        {propostas.filter((p) => ['COM_PARECER', 'AGUARDA_APROVACAO'].includes(p.estado)).map((p) => (
+        {propostas.filter((p) => ['COM_PARECER', 'AGUARDA_APROVACAO', 'REJEITADA'].includes(p.estado)).map((p) => (
           <div key={p.id} className="border border-linha rounded-xl p-4 mb-3">
             <div className="flex items-center gap-2.5 flex-wrap mb-2">
               <b className="font-mono text-vermelho">{p.numero}</b>
@@ -98,11 +99,20 @@ export default function AbatePage() {
             <p className="text-[13px] mb-1"><b>Motivo:</b> {p.motivo}</p>
             <p className="text-[13px] mb-1"><b>Parecer:</b> {p.parecer} <span className="text-cinza">— {p.parecerPor?.nome}</span></p>
             <p className="text-[13px] mb-2.5"><b>Destino:</b> {p.destino} · <b>Sanitização:</b> {p.sanitizacao}</p>
+            {p.estado === 'REJEITADA' && p.motivoRejeicao && (
+              <p className="text-[13px] mb-2.5 bg-vermelho/5 border-l-4 border-vermelho rounded-lg p-3">
+                <b className="text-vermelho">Fundamentação da rejeição:</b> {p.motivoRejeicao}
+              </p>
+            )}
             <div className="flex gap-2 flex-wrap">
               {p.estado === 'COM_PARECER' && user?.perfil === 'ADMIN' &&
                 <button className="btn-secundario !px-3 !py-1.5 !text-xs" onClick={() => submeter(p.id)}>Submeter à Direcção</button>}
-              {p.estado === 'AGUARDA_APROVACAO' && user?.perfil === 'DIRECCAO' &&
-                <button className="btn-dourado !px-3 !py-1.5 !text-xs" onClick={() => aprovar(p.id)}>✓ Aprovar e emitir Auto de Abate</button>}
+              {p.estado === 'AGUARDA_APROVACAO' && user?.perfil === 'DIRECCAO' && (
+                <>
+                  <button className="btn-dourado !px-3 !py-1.5 !text-xs" onClick={() => aprovar(p.id)}>✓ Aprovar e emitir Auto de Abate</button>
+                  <button className="btn-contorno !px-3 !py-1.5 !text-xs" onClick={() => setARejeitar(p)}>✕ Rejeitar com fundamentação</button>
+                </>
+              )}
               {p.estado === 'AGUARDA_APROVACAO' && user?.perfil !== 'DIRECCAO' &&
                 <span className="text-xs text-ambar font-semibold">⏳ Aguarda aprovação da Direcção</span>}
             </div>
@@ -134,6 +144,7 @@ export default function AbatePage() {
       </section>
 
       {proposta && <NovaProposta activo={proposta} fechar={() => setProposta(null)} feito={() => { setProposta(null); carregar(); }} />}
+      {aRejeitar && <ModalRejeicao proposta={aRejeitar} fechar={() => setARejeitar(null)} feito={() => { setARejeitar(null); carregar(); }} />}
     </div>
   );
 }
@@ -199,6 +210,47 @@ function NovaProposta({ activo, fechar, feito }: any) {
         <div className="px-5 py-4 border-t border-linha flex justify-end gap-2.5">
           <button className="btn-contorno" onClick={fechar}>Cancelar</button>
           <button className="btn-primario" onClick={criar}>Registar parecer e criar proposta</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function ModalRejeicao({ proposta, fechar, feito }: any) {
+  const [motivo, setMotivo] = useState('');
+  const [erro, setErro] = useState('');
+  const [aGuardar, setAGuardar] = useState(false);
+
+  async function rejeitar() {
+    if (motivo.trim().length < 10) { setErro('Indique a fundamentação (mín. 10 caracteres).'); return; }
+    setAGuardar(true);
+    try {
+      await api(`/abate/propostas/${proposta.id}/rejeitar`, { method: 'PATCH', body: JSON.stringify({ motivo }) });
+      feito();
+    } catch (e: any) { setErro(e.message); } finally { setAGuardar(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-preto/55 z-50 flex items-start justify-center p-4 pt-12 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && fechar()}>
+      <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl">
+        <div className="flex items-center px-5 py-4 border-b border-linha">
+          <h3 className="font-bold flex-1">Rejeitar a proposta {proposta.numero}</h3>
+          <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>
+        </div>
+        <div className="p-5">
+          <p className="text-[13px] text-cinza mb-3">
+            A fundamentação fica registada no processo e é comunicada ao Administrador e à equipa técnica.
+            Os equipamentos mantêm-se em inventário e podem ser objecto de nova proposta.
+          </p>
+          <label className="campo-rotulo">Fundamentação da rejeição</label>
+          <textarea className="campo-input min-h-[90px]" value={motivo} onChange={(e) => setMotivo(e.target.value)}
+            placeholder="Ex.: Reavaliar a hipótese de reparação com fornecedor alternativo antes do abate." />
+          {erro && <p className="text-vermelho text-sm mt-2">{erro}</p>}
+        </div>
+        <div className="px-5 py-4 border-t border-linha flex justify-end gap-2.5">
+          <button className="btn-contorno" onClick={fechar}>Cancelar</button>
+          <button className="btn-primario" onClick={rejeitar} disabled={aGuardar}>{aGuardar ? 'A registar…' : 'Rejeitar proposta'}</button>
         </div>
       </div>
     </div>

@@ -51,6 +51,7 @@ export class AuthService {
       email: u.email,
       perfil: u.perfil,
       localizacao: u.localizacao,
+      precisaTrocarPassword: u.precisaTrocarPassword,
       departamento: u.departamento?.nome ?? null,
     };
   }

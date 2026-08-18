@@ -19,7 +19,10 @@ export default function PedidosPage() {
 
   const carregar = useCallback(() => {
     api('/pedidos').then(setPedidos).catch((e) => setMsg(e.message));
-    if (user?.perfil !== 'FUNCIONARIO') api('/activos').then(setActivos).catch(() => {});
+    // Once-Only: o funcionário recebe os equipamentos que lhe estão atribuídos;
+    // os perfis de gestão recebem o inventário completo.
+    const origem = user?.perfil === 'FUNCIONARIO' ? '/activos/meus' : '/activos';
+    api(origem).then(setActivos).catch(() => {});
   }, [user?.perfil]);
   useEffect(carregar, [carregar]);
 
@@ -135,10 +138,21 @@ function NovoPedido({ activos, user, fechar, feito }: any) {
           <label className="campo-rotulo">Equipamento associado (opcional)</label>
           <select className="campo-input" value={activoId} onChange={(e) => setActivoId(e.target.value)}>
             <option value="">— Nenhum / não sei —</option>
-            {activos.filter((a: any) => a.estado !== 'ABATIDO').map((a: any) => (
-              <option key={a.id} value={a.id}>{a.numInventario} · {a.categoria} · {a.localizacao}</option>
-            ))}
+            {user?.perfil === 'FUNCIONARIO' ? (
+              <optgroup label="Os seus equipamentos">
+                {activos.map((a: any) => (
+                  <option key={a.id} value={a.id}>{a.numInventario} · {a.categoria} {a.marca}</option>
+                ))}
+              </optgroup>
+            ) : (
+              activos.filter((a: any) => a.estado !== 'ABATIDO').map((a: any) => (
+                <option key={a.id} value={a.id}>{a.numInventario} · {a.categoria} · {a.localizacao}</option>
+              ))
+            )}
           </select>
+          {user?.perfil === 'FUNCIONARIO' && (
+            <p className="text-[11px] text-dourado mt-1">✓ Once-Only: o sistema já sabe que equipamentos lhe estão atribuídos</p>
+          )}
         </div>
       )}
       <div>

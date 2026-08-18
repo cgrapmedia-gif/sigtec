@@ -64,6 +64,7 @@ model User {
   passwordHash   String
   perfil         Perfil        @default(FUNCIONARIO)
   activo         Boolean       @default(true)
+  precisaTrocarPassword Boolean @default(false)
   localizacao    String?
   departamento   Departamento? @relation(fields: [departamentoId], references: [id])
   departamentoId String?
@@ -171,6 +172,7 @@ model PropostaAbate {
   destino      String
   sanitizacao  String
   estado       EstadoProposta @default(COM_PARECER)
+  motivoRejeicao String?
   activos      Activo[]
   criadoEm     DateTime       @default(now())
   auto         AutoAbate?
@@ -214,6 +216,7 @@ model Notificacao {
   userId   String
   titulo   String
   corpo    String?
+  link     String?
   lida     Boolean  @default(false)
   criadoEm DateTime @default(now())
 }

@@ -10,6 +10,7 @@ import { AbateModule } from './abate/abate.module';
 import { AuditoriaModule } from './auditoria/auditoria.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { QuestionarioModule } from './questionario/questionario.module';
+import { NotificacoesModule } from './notificacoes/notificacoes.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { QuestionarioModule } from './questionario/questionario.module';
     ManutencaoModule,
     AbateModule,
     AuditoriaModule,
+    NotificacoesModule,
     DashboardModule,
     QuestionarioModule,
   ],
