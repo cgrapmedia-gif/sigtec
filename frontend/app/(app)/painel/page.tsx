@@ -53,7 +53,7 @@ function PainelFuncionario({ d, abrirAssistente }: any) {
         <div className="cartao bg-gradient-to-br from-[#FDF9EE] to-[#F7EFD8] border-douradoClaro">
           <p className="text-[13.5px] font-semibold mb-2">⭐ Tem {d.porAvaliar.length} pedido(s) resolvido(s) por avaliar</p>
           <p className="text-[12.5px] text-cinza mb-2.5">A sua opinião ajuda a melhorar o serviço e leva menos de dez segundos.</p>
-          <Link href="/pedidos" className="btn-dourado !min-h-0 !py-2 !text-xs inline-flex">Avaliar agora</Link>
+          <Link href="/pedidos" className="btn-dourado btn-mini inline-flex">Avaliar agora</Link>
         </div>
       )}
 
@@ -79,7 +79,7 @@ function PainelFuncionario({ d, abrirAssistente }: any) {
         </section>
       )}
 
-      <div className="grid sm:grid-cols-2 gap-5">
+      <div className="grid lg:grid-cols-2 gap-4 lg:gap-5">
         {d.meusItens.length > 0 && (
           <section className="cartao">
             <h2 className="text-[15px] font-bold mb-2.5">Os meus equipamentos</h2>
@@ -137,7 +137,7 @@ function PainelTecnico({ d }: any) {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 lg:gap-3">
         <Contador rotulo="SLA excedido" valor={c.violados} cor="text-vermelho" destaque={c.violados > 0} />
         <Contador rotulo="Prazo a terminar" valor={c.emRisco} cor="text-ambar" destaque={c.emRisco > 0} />
         <Contador rotulo="Por atribuir" valor={c.naoAtribuidos} cor="text-azul" />
@@ -222,7 +222,7 @@ function PainelTecnico({ d }: any) {
         </section>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
         <Atalho href="/activos" ico="⛁" texto="Inventário" />
         <Atalho href="/abate" ico="♻" texto={`Abate${c.propostasAbate ? ` (${c.propostasAbate})` : ''}`} />
         <Atalho href="/conhecimento" ico="📖" texto="Conhecimento" />
@@ -251,21 +251,21 @@ function PainelDireccao({ d }: any) {
                 {p.valorSubstituicao > 0 && (
                   <p className="text-[12.5px] mt-1">Substituição estimada: <b className="font-mono">{p.valorSubstituicao.toLocaleString('pt-PT')}€</b></p>
                 )}
-                <Link href="/abate" className="btn-dourado !min-h-0 !py-2 !text-xs inline-flex mt-2.5">Analisar e decidir</Link>
+                <Link href="/abate" className="btn-dourado btn-mini inline-flex mt-2.5">Analisar e decidir</Link>
               </div>
             ))}
           </div>
         </section>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 lg:gap-3">
         <Contador rotulo="Pedidos abertos" valor={i.pedidosAbertos} cor={i.criticos ? 'text-vermelho' : ''} />
         <Contador rotulo="SLA cumprido" valor={`${i.slaCumprido}%`} cor={i.slaCumprido >= 90 ? 'text-verde' : 'text-ambar'} />
         <Contador rotulo="Satisfação" valor={i.satisfacao ? `${i.satisfacao}/5` : '—'} cor="text-azul" />
         <Contador rotulo="Parque activo" valor={i.totalActivos} />
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-5">
+      <div className="grid lg:grid-cols-2 gap-4 lg:gap-5">
         <section className="cartao">
           <h2 className="text-[15px] font-bold mb-2.5">Património tecnológico</h2>
           <p className="text-[13px] mb-1">Autos de abate emitidos: <b className="font-mono">{i.autosEmitidos}</b></p>
@@ -273,7 +273,7 @@ function PainelDireccao({ d }: any) {
           {i.investimentoProposto > 0 && (
             <p className="text-[13px]">Investimento de substituição proposto: <b className="font-mono text-vermelho">{i.investimentoProposto.toLocaleString('pt-PT')}€</b></p>
           )}
-          <Link href="/relatorios" className="btn-contorno !min-h-0 !py-2 !text-xs inline-flex mt-3">Ver relatório completo</Link>
+          <Link href="/relatorios" className="btn-contorno btn-mini inline-flex mt-3">Ver relatório completo</Link>
         </section>
         <section className="cartao">
           <h2 className="text-[15px] font-bold mb-2.5">Transparência</h2>
@@ -281,7 +281,7 @@ function PainelDireccao({ d }: any) {
             Todos os acessos a dados pessoais ficam registados num livro imutável. O painel público de indicadores
             está disponível a todos os funcionários.
           </p>
-          <Link href="/transparencia" className="btn-contorno !min-h-0 !py-2 !text-xs inline-flex mt-3">Abrir Data Tracker</Link>
+          <Link href="/transparencia" className="btn-contorno btn-mini inline-flex mt-3">Abrir Data Tracker</Link>
         </section>
       </div>
     </div>

@@ -44,9 +44,9 @@ export default function UtilizadoresPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="text-xl font-bold flex-1">Utilizadores</h1>
-        {podeGerir && <button className="btn-primario" onClick={() => setNovo(true)}>＋ Criar conta por convite</button>}
+      <div className="flex items-center gap-2 flex-wrap">
+        <h1 className="hidden lg:block text-xl font-bold flex-1">Utilizadores</h1>
+        {podeGerir && <button className="btn-primario flex-1 lg:flex-none" onClick={() => setNovo(true)}>＋ Criar conta por convite</button>}
       </div>
 
       <p className="text-[13px] text-cinza">
@@ -56,7 +56,7 @@ export default function UtilizadoresPage() {
       {msg && <p className="text-vermelho text-sm">{msg}</p>}
 
       <div className="cartao envolvente-tabela overflow-x-auto">
-        <table className="w-full tabela-adaptavel md:min-w-[680px]">
+        <table className="w-full tabela-adaptavel lg:min-w-[680px]">
           <thead>
             <tr>
               <th className="th">Nome</th><th className="th">Email institucional</th><th className="th">Perfil</th>
@@ -82,13 +82,13 @@ export default function UtilizadoresPage() {
                 {podeGerir && (
                   <td data-accoes className="td text-right whitespace-nowrap">
                     {u.id !== user?.id && (
-                      <button className="btn-contorno !min-h-0 !px-2.5 !py-1 !text-[11px] mr-1" onClick={() => setEditarUser(u)}>Editar</button>
+                      <button className="btn-contorno !min-h-0 btn-mini mr-1" onClick={() => setEditarUser(u)}>Editar</button>
                     )}
                     {u.activo && u.id !== user?.id && (
-                      <button className="btn-contorno !min-h-0 !px-2.5 !py-1 !text-[11px] mr-1" onClick={() => reporPassword(u)}>Repor password</button>
+                      <button className="btn-contorno !min-h-0 btn-mini mr-1" onClick={() => reporPassword(u)}>Repor password</button>
                     )}
                     {u.id !== user?.id && (
-                      <button className="btn-contorno !min-h-0 !px-2.5 !py-1 !text-[11px]" onClick={() => alternarActivo(u)}>
+                      <button className="btn-contorno !min-h-0 btn-mini" onClick={() => alternarActivo(u)}>
                         {u.activo ? 'Desactivar' : 'Reactivar'}
                       </button>
                     )}
@@ -96,7 +96,7 @@ export default function UtilizadoresPage() {
                 )}
               </tr>
             ))}
-            {users.length === 0 && <tr><td colSpan={6} className="td text-center text-cinza py-6">Sem utilizadores registados.</td></tr>}
+            {users.length === 0 && <tr><td colSpan={6} className="td vazio">Sem utilizadores registados.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -167,7 +167,7 @@ function NovaConta({ departamentos, fechar, feito }: any) {
     <Modal titulo="Criar conta por convite" fechar={fechar} rodape={
       <>
         <button className="btn-contorno" onClick={fechar}>Cancelar</button>
-        <button className="btn-primario" onClick={criar} disabled={aGuardar}>{aGuardar ? 'A criar…' : 'Criar conta'}</button>
+        <button className="btn-primario flex-1 lg:flex-none" onClick={criar} disabled={aGuardar}>{aGuardar ? 'A criar…' : 'Criar conta'}</button>
       </>
     }>
       <div className="space-y-3.5">
@@ -184,7 +184,7 @@ function NovaConta({ departamentos, fechar, feito }: any) {
             <p className="text-[11px] text-dourado mt-1">✓ Gerado do nome. É com este utilizador que a pessoa inicia sessão.</p>
           )}
         </div>
-        <div className="grid sm:grid-cols-2 gap-3.5">
+        <div className="grid lg:grid-cols-2 gap-3.5">
           <div>
             <label className="campo-rotulo">Perfil de acesso</label>
             <select className="campo-input" value={perfil} onChange={(e) => setPerfil(e.target.value)}>
@@ -239,7 +239,7 @@ function EditarConta({ conta, departamentos, fechar, feito }: any) {
     <Modal titulo={`Editar ${conta.nome}`} fechar={fechar} rodape={
       <>
         <button className="btn-contorno" onClick={fechar}>Cancelar</button>
-        <button className="btn-primario" onClick={guardar} disabled={aGuardar}>{aGuardar ? 'A guardar…' : 'Guardar alterações'}</button>
+        <button className="btn-primario flex-1 lg:flex-none" onClick={guardar} disabled={aGuardar}>{aGuardar ? 'A guardar…' : 'Guardar alterações'}</button>
       </>
     }>
       <div className="space-y-3.5">
@@ -252,7 +252,7 @@ function EditarConta({ conta, departamentos, fechar, feito }: any) {
           <input className="campo-input bg-papel font-mono" value={conta.utilizador ?? conta.email.split('@')[0]} disabled />
           <p className="text-[11px] text-cinza mt-1">O utilizador não é alterável: é a chave de todo o histórico e auditoria.</p>
         </div>
-        <div className="grid sm:grid-cols-2 gap-3.5">
+        <div className="grid lg:grid-cols-2 gap-3.5">
           <div>
             <label className="campo-rotulo">Perfil de acesso</label>
             <select className="campo-input" value={perfil} onChange={(e) => setPerfil(e.target.value)}>
@@ -311,7 +311,7 @@ function ModalCredencial({ credencial, fechar }: any) {
 function Modal({ titulo, children, rodape, fechar }: any) {
   return (
     <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="modal-caixa sm:max-w-xl">
+      <div className="modal-caixa lg:max-w-xl">
         <div className="modal-cabecalho">
           <h3 className="font-bold flex-1">{titulo}</h3>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>

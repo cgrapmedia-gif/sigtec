@@ -17,9 +17,9 @@ export default function SintomasPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="text-xl font-bold flex-1">Catálogo de Sintomas</h1>
-        <button className="btn-primario" onClick={() => setEditar({})}>＋ Novo sintoma</button>
+      <div className="flex items-center gap-2 flex-wrap">
+        <h1 className="hidden lg:block text-xl font-bold flex-1">Catálogo de Sintomas</h1>
+        <button className="btn-primario flex-1 lg:flex-none" onClick={() => setEditar({})}>＋ Novo sintoma</button>
       </div>
       <p className="text-[13px] text-cinza">
         É este catálogo que permite a quem pede ajuda descrever o problema sem saber vocabulário técnico.
@@ -80,7 +80,7 @@ function FormSintoma({ sintoma, grupos, fechar, feito }: any) {
 
   return (
     <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="modal-caixa sm:max-w-2xl">
+      <div className="modal-caixa lg:max-w-2xl">
         <div className="modal-cabecalho">
           <h3 className="font-bold flex-1">{novo ? 'Novo sintoma' : 'Editar sintoma'}</h3>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>
@@ -103,7 +103,7 @@ function FormSintoma({ sintoma, grupos, fechar, feito }: any) {
               placeholder="Ex.: O ecrã fica preto a meio do trabalho" />
             <p className="text-[11px] text-cinza mt-1">Evite termos técnicos: quem escolhe isto não é informático.</p>
           </div>
-          <div className="grid sm:grid-cols-3 gap-3.5">
+          <div className="grid lg:grid-cols-3 gap-3.5">
             <div>
               <label className="campo-rotulo">Categoria técnica</label>
               <select className="campo-input" value={f.categoriaTecnica} onChange={(e) => set('categoriaTecnica', e.target.value)}>
@@ -134,7 +134,7 @@ function FormSintoma({ sintoma, grupos, fechar, feito }: any) {
                 <button className="text-vermelho px-2" onClick={() => setPassos((s) => s.filter((_, j) => j !== i))}>✕</button>
               </div>
             ))}
-            <button className="btn-contorno !min-h-0 !px-3 !py-1.5 !text-xs" onClick={() => setPassos((s) => [...s, ''])}>＋ Passo</button>
+            <button className="btn-contorno btn-mini" onClick={() => setPassos((s) => [...s, ''])}>＋ Passo</button>
           </fieldset>
 
           <fieldset className="border border-linha rounded-xl p-3.5">
@@ -153,7 +153,7 @@ function FormSintoma({ sintoma, grupos, fechar, feito }: any) {
                   onChange={(e) => setPerguntas((s) => s.map((x, j) => j === i ? { ...x, opcoes: e.target.value.split('|').map((o) => o.trim()).filter(Boolean) } : x))} />
               </div>
             ))}
-            <button className="btn-contorno !min-h-0 !px-3 !py-1.5 !text-xs"
+            <button className="btn-contorno btn-mini"
               onClick={() => setPerguntas((s) => [...s, { chave: `p${s.length + 1}`, pergunta: '', opcoes: [] }])}>＋ Pergunta</button>
           </fieldset>
 
@@ -176,7 +176,7 @@ function FormSintoma({ sintoma, grupos, fechar, feito }: any) {
         </div>
         <div className="modal-rodape">
           <button className="btn-contorno" onClick={fechar}>Cancelar</button>
-          <button className="btn-primario" onClick={guardar}>Guardar sintoma</button>
+          <button className="btn-primario flex-1 lg:flex-none" onClick={guardar}>Guardar sintoma</button>
         </div>
       </div>
     </div>

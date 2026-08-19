@@ -28,13 +28,13 @@ export default function RelatoriosPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-3 flex-wrap print:hidden">
-        <h1 className="text-xl font-bold flex-1">Relatórios &amp; Indicadores</h1>
+      <div className="flex items-center gap-2 flex-wrap print:hidden">
+        <h1 className="hidden lg:block text-xl font-bold flex-1">Relatórios &amp; Indicadores</h1>
         <button className="btn-contorno" onClick={exportarCsv}>⬇ Exportar inventário (CSV)</button>
         <button className="btn-secundario" onClick={() => window.print()}>🖨 Imprimir relatório</button>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 lg:gap-3.5">
         <Kpi rotulo="Tempo médio de resolução" valor={`${d.desempenho.tempoMedioHoras}h`} nota="Pedidos concluídos" />
         <Kpi rotulo="SLA cumprido" valor={`${d.desempenho.slaCumpridoPct}%`} nota="Objectivo: 90%" cor={d.desempenho.slaCumpridoPct >= 90 ? 'text-verde' : 'text-ambar'} />
         <Kpi rotulo="Satisfação média" valor={d.desempenho.satisfacaoMedia ? `${d.desempenho.satisfacaoMedia}/5` : '—'} nota={`${d.desempenho.totalAvaliacoes} avaliação(ões)`} cor="text-azul" />
@@ -50,10 +50,10 @@ export default function RelatoriosPage() {
         <p className="text-[11px] text-cinza mt-2">Gerado a partir dos dados do período, por regras explicáveis e auditáveis.</p>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-5">
+      <div className="grid lg:grid-cols-2 gap-4 lg:gap-5">
         <section className="cartao">
           <h2 className="text-[15px] font-bold mb-3">Evolução mensal</h2>
-          <div className="h-[240px]">
+          <div className="h-[220px] lg:h-[240px] -mx-2">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={d.evolucao}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E2DDD2" />
@@ -70,7 +70,7 @@ export default function RelatoriosPage() {
 
         <section className="cartao">
           <h2 className="text-[15px] font-bold mb-3">Equipamentos com maior taxa de falha</h2>
-          <div className="h-[240px]">
+          <div className="h-[220px] lg:h-[240px] -mx-2">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={d.topFalhas} layout="vertical" margin={{ left: 30 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E2DDD2" />
@@ -89,10 +89,10 @@ export default function RelatoriosPage() {
 
         <section className="cartao">
           <h2 className="text-[15px] font-bold mb-3">Pedidos por categoria</h2>
-          <div className="h-[240px]">
+          <div className="h-[220px] lg:h-[240px] -mx-2">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={d.porCategoria} dataKey="total" nameKey="categoria" outerRadius={85} label={{ fontSize: 11 }}>
+                <Pie data={d.porCategoria} dataKey="total" nameKey="categoria" outerRadius="72%" label={{ fontSize: 11 }}>
                   {d.porCategoria.map((_: any, i: number) => <Cell key={i} fill={CORES[i % CORES.length]} />)}
                 </Pie>
                 <Tooltip />
@@ -104,7 +104,7 @@ export default function RelatoriosPage() {
 
         <section className="cartao">
           <h2 className="text-[15px] font-bold mb-3">Distribuição por prioridade</h2>
-          <div className="h-[240px]">
+          <div className="h-[220px] lg:h-[240px] -mx-2">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={d.porPrioridade.map((p: any) => ({ ...p, rotulo: ROTULO_PRIORIDADE[p.prioridade] }))}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E2DDD2" />
@@ -123,21 +123,21 @@ export default function RelatoriosPage() {
       <section className="cartao">
         <h2 className="text-[15px] font-bold mb-3">Risco de falha do parque</h2>
         <p className="text-xs text-cinza mb-3">Pontuação por regras: idade face ao ciclo de vida, garantia expirada e historial de falhas.</p>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[560px]">
+        <div className="envolvente-tabela overflow-x-auto">
+          <table className="w-full tabela-adaptavel lg:min-w-[560px]">
             <thead><tr><th className="th">Inventário</th><th className="th">Equipamento</th><th className="th">Categoria</th><th className="th">Risco</th><th className="th">Pontuação</th></tr></thead>
             <tbody>
               {d.parqueRisco.slice(0, 8).map((a: any) => (
                 <tr key={a.numInventario}>
-                  <td className="td font-mono text-xs font-semibold">{a.numInventario}</td>
-                  <td className="td">{a.marca} {a.modelo}</td>
-                  <td className="td text-[12.5px]">{a.categoria}</td>
-                  <td className="td">
+                  <td data-principal className="td font-mono text-xs font-semibold">{a.numInventario}</td>
+                  <td data-rotulo="Equipamento" className="td">{a.marca} {a.modelo}</td>
+                  <td data-rotulo="Categoria" className="td text-[12.5px]">{a.categoria}</td>
+                  <td data-rotulo="Risco" className="td">
                     <span className={`pill ${a.nivel === 'ALTO' ? 'bg-vermelho text-white' : a.nivel === 'MEDIO' ? 'bg-ambar/10 text-ambar' : 'bg-verde/10 text-verde'}`}>
                       {a.nivel === 'ALTO' ? 'Alto' : a.nivel === 'MEDIO' ? 'Médio' : 'Baixo'}
                     </span>
                   </td>
-                  <td className="td font-mono">{a.pontos}</td>
+                  <td data-rotulo="Pontuação" className="td font-mono">{a.pontos}</td>
                 </tr>
               ))}
             </tbody>
@@ -151,16 +151,16 @@ export default function RelatoriosPage() {
           <p className="text-sm text-cinza">Nenhum equipamento cumpre os critérios de substituição neste momento.</p>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[560px]">
+            <div className="envolvente-tabela overflow-x-auto">
+              <table className="w-full tabela-adaptavel lg:min-w-[560px]">
                 <thead><tr><th className="th">Inventário</th><th className="th">Equipamento</th><th className="th">Motivos</th><th className="th">Estimativa</th></tr></thead>
                 <tbody>
                   {d.planoRenovacao.map((p: any) => (
                     <tr key={p.numInventario}>
-                      <td className="td font-mono text-xs font-semibold">{p.numInventario}</td>
-                      <td className="td">{p.equipamento}</td>
-                      <td className="td text-[12px]">{p.motivos.map((m: string) => <span key={m} className="pill bg-linha text-cinza mr-1 mb-1">{m}</span>)}</td>
-                      <td className="td font-mono">{p.estimativa ? `${p.estimativa.toLocaleString('pt-PT')}€` : '—'}</td>
+                      <td data-principal className="td font-mono text-xs font-semibold">{p.numInventario}</td>
+                      <td data-rotulo="Equipamento" className="td">{p.equipamento}</td>
+                      <td data-rotulo="Motivos" className="td text-[12px] flex-wrap">{p.motivos.map((m: string) => <span key={m} className="pill bg-linha text-cinza mr-1 mb-1">{m}</span>)}</td>
+                      <td data-rotulo="Estimativa" className="td font-mono">{p.estimativa ? `${p.estimativa.toLocaleString('pt-PT')}€` : '—'}</td>
                     </tr>
                   ))}
                 </tbody>

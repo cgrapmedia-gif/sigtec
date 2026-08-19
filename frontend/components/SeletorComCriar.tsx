@@ -107,10 +107,10 @@ export default function SeletorComCriar({
           ))}
           {erro && <p className="text-vermelho text-[12.5px]">{erro}</p>}
           <div className="flex gap-2">
-            <button type="button" className="btn-contorno !min-h-0 !py-2 !text-xs flex-1" onClick={() => setACriar(false)}>
+            <button type="button" className="btn-contorno btn-mini flex-1" onClick={() => setACriar(false)}>
               Cancelar
             </button>
-            <button type="button" className="btn-primario !min-h-0 !py-2 !text-xs flex-1" onClick={criar} disabled={aGuardar}>
+            <button type="button" className="btn-primario btn-mini flex-1" onClick={criar} disabled={aGuardar}>
               {aGuardar ? 'A criar…' : 'Criar e usar'}
             </button>
           </div>

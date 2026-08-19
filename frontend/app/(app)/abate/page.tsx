@@ -52,7 +52,6 @@ export default function AbatePage() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-xl font-bold">Obsolescência &amp; Abate</h1>
       <p className="text-[13px] bg-gradient-to-br from-[#FDF9EE] to-[#F7EFD8] border border-douradoClaro border-l-4 border-l-dourado rounded-lg p-3.5">
         ♻ <b className="text-dourado">Análise automática:</b> um activo torna-se candidato quando cumpre <b>2 ou mais critérios</b> —
         idade acima do ciclo de vida · garantia expirada · ≥ 5 falhas em 6 meses · reparação acima de 50% do valor de substituição.
@@ -60,11 +59,11 @@ export default function AbatePage() {
       </p>
       {msg && <p className="text-vermelho text-sm">{msg}</p>}
 
-      <section className="cartao">
+      <section className="cartao envolvente-tabela">
         <div className="flex items-center gap-3 flex-wrap mb-3">
           <h2 className="text-[15px] font-bold flex-1">Candidatos a abate</h2>
           {seleccionados.length > 1 && ['ADMIN', 'TECNICO'].includes(user?.perfil) && (
-            <button className="btn-primario !px-3 !py-1.5 !text-xs"
+            <button className="btn-primario btn-mini"
               onClick={() => setProposta(candidatos.filter((c) => seleccionados.includes(c.id)))}>
               Processo conjunto ({seleccionados.length} equipamentos)
             </button>
@@ -73,7 +72,7 @@ export default function AbatePage() {
         {candidatos.length === 0 ? (
           <p className="text-sm text-cinza">Sem novos candidatos — todos os obsoletos identificados já têm processo em curso.</p>
         ) : (
-          <table className="w-full">
+          <table className="w-full tabela-adaptavel">
             <tbody>
               {candidatos.map((a) => (
                 <tr key={a.id}>
@@ -84,11 +83,11 @@ export default function AbatePage() {
                     )}
                     <span className="font-mono text-xs font-semibold align-middle">{a.numInventario}</span>
                   </td>
-                  <td className="td"><span className="font-medium">{a.marca} {a.modelo}</span><span className="block text-[11px] text-cinza">{a.categoria} · {a.localizacao}</span></td>
-                  <td className="td">{a.motivos.map((m: string) => <span key={m} className="pill bg-linha text-cinza mr-1 mb-1">{m}</span>)}</td>
-                  <td className="td text-right">
+                  <td data-rotulo="Equipamento" className="td"><span className="font-medium">{a.marca} {a.modelo}</span><span className="block text-[11px] text-cinza">{a.categoria} · {a.localizacao}</span></td>
+                  <td data-rotulo="Critérios" className="td flex-wrap">{a.motivos.map((m: string) => <span key={m} className="pill bg-linha text-cinza mr-1 mb-1">{m}</span>)}</td>
+                  <td data-accoes className="td text-right">
                     {['ADMIN', 'TECNICO'].includes(user?.perfil)
-                      ? <button className="btn-secundario !px-3 !py-1.5 !text-xs" onClick={() => setProposta([a])}>Iniciar processo</button>
+                      ? <button className="btn-secundario btn-mini" onClick={() => setProposta([a])}>Iniciar processo</button>
                       : <span className="text-[11px] text-cinza">Aguarda proposta</span>}
                   </td>
                 </tr>
@@ -121,11 +120,11 @@ export default function AbatePage() {
             )}
             <div className="flex gap-2 flex-wrap">
               {p.estado === 'COM_PARECER' && user?.perfil === 'ADMIN' &&
-                <button className="btn-secundario !px-3 !py-1.5 !text-xs" onClick={() => submeter(p.id)}>Submeter à Direcção</button>}
+                <button className="btn-secundario btn-mini" onClick={() => submeter(p.id)}>Submeter à Direcção</button>}
               {p.estado === 'AGUARDA_APROVACAO' && user?.perfil === 'DIRECCAO' && (
                 <>
-                  <button className="btn-dourado !px-3 !py-1.5 !text-xs" onClick={() => aprovar(p.id)}>✓ Aprovar e emitir Auto de Abate</button>
-                  <button className="btn-contorno !px-3 !py-1.5 !text-xs" onClick={() => setARejeitar(p)}>✕ Rejeitar com fundamentação</button>
+                  <button className="btn-dourado btn-mini" onClick={() => aprovar(p.id)}>✓ Aprovar e emitir Auto de Abate</button>
+                  <button className="btn-contorno btn-mini" onClick={() => setARejeitar(p)}>✕ Rejeitar com fundamentação</button>
                 </>
               )}
               {p.estado === 'AGUARDA_APROVACAO' && user?.perfil !== 'DIRECCAO' &&
@@ -138,17 +137,17 @@ export default function AbatePage() {
       <section className="cartao">
         <h2 className="text-[15px] font-bold mb-3">Autos de abate emitidos</h2>
         {autos.length === 0 ? <p className="text-sm text-cinza">Ainda não foram emitidos autos. Serão listados aqui após a primeira aprovação da Direcção.</p> : (
-          <table className="w-full">
+          <table className="w-full tabela-adaptavel">
             <thead><tr><th className="th">N.º do Auto</th><th className="th">Data</th><th className="th">Equipamentos</th><th className="th">Aprovado por</th><th className="th"></th></tr></thead>
             <tbody>
               {autos.map((a) => (
                 <tr key={a.id}>
-                  <td className="td font-mono font-bold">{a.numero}</td>
-                  <td className="td font-mono text-xs">{fmtData(a.data)}</td>
-                  <td className="td text-[12.5px]">{a.proposta.activos.map((x: any) => x.numInventario).join(', ')}</td>
-                  <td className="td text-[12.5px]">{a.aprovadoPor.nome}</td>
-                  <td className="td text-right">
-                    <button className="btn-contorno !px-3 !py-1.5 !text-xs" onClick={() => verPdf(a.id, a.numero)}>📄 Abrir PDF</button>
+                  <td data-principal className="td font-mono font-bold">{a.numero}</td>
+                  <td data-rotulo="Data" className="td font-mono text-xs">{fmtData(a.data)}</td>
+                  <td data-rotulo="Equipamentos" className="td text-[12.5px]">{a.proposta.activos.map((x: any) => x.numInventario).join(', ')}</td>
+                  <td data-rotulo="Aprovado por" className="td text-[12.5px]">{a.aprovadoPor.nome}</td>
+                  <td data-accoes className="td text-right">
+                    <button className="btn-contorno btn-mini" onClick={() => verPdf(a.id, a.numero)}>📄 Abrir PDF</button>
                   </td>
                 </tr>
               ))}
@@ -192,7 +191,7 @@ function NovaProposta({ activos, fechar, feito }: any) {
 
   return (
     <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="modal-caixa sm:max-w-2xl">
+      <div className="modal-caixa lg:max-w-2xl">
         <div className="modal-cabecalho">
           <h3 className="font-bold flex-1">
             Iniciar processo de abate — {lista.length === 1 ? primeiro.numInventario : `${lista.length} equipamentos`}
@@ -217,7 +216,7 @@ function NovaProposta({ activos, fechar, feito }: any) {
             <textarea className="campo-input min-h-[80px]" value={parecer} onChange={(e) => setParecer(e.target.value)}
               placeholder="Viabilidade de reparação, custo estimado, recomendação." />
           </div>
-          <div className="grid sm:grid-cols-2 gap-3.5">
+          <div className="grid lg:grid-cols-2 gap-3.5">
             <div>
               <label className="campo-rotulo">Destino proposto</label>
               <select className="campo-input" value={destino} onChange={(e) => setDestino(e.target.value)}>
@@ -241,7 +240,7 @@ function NovaProposta({ activos, fechar, feito }: any) {
         </div>
         <div className="modal-rodape">
           <button className="btn-contorno" onClick={fechar}>Cancelar</button>
-          <button className="btn-primario" onClick={criar}>Registar parecer e criar proposta</button>
+          <button className="btn-primario flex-1 lg:flex-none" onClick={criar}>Registar parecer e criar proposta</button>
         </div>
       </div>
     </div>
@@ -265,7 +264,7 @@ function ModalRejeicao({ proposta, fechar, feito }: any) {
 
   return (
     <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="modal-caixa sm:max-w-xl">
+      <div className="modal-caixa lg:max-w-xl">
         <div className="modal-cabecalho">
           <h3 className="font-bold flex-1">Rejeitar a proposta {proposta.numero}</h3>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>
@@ -282,7 +281,7 @@ function ModalRejeicao({ proposta, fechar, feito }: any) {
         </div>
         <div className="modal-rodape">
           <button className="btn-contorno" onClick={fechar}>Cancelar</button>
-          <button className="btn-primario" onClick={rejeitar} disabled={aGuardar}>{aGuardar ? 'A registar…' : 'Rejeitar proposta'}</button>
+          <button className="btn-primario flex-1 lg:flex-none" onClick={rejeitar} disabled={aGuardar}>{aGuardar ? 'A registar…' : 'Rejeitar proposta'}</button>
         </div>
       </div>
     </div>

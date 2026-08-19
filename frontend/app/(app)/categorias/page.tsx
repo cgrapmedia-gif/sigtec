@@ -24,9 +24,9 @@ export default function CategoriasPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="text-xl font-bold flex-1">Categorias</h1>
-        {podeGerir && <button className="btn-primario" onClick={() => setEditar({})}>＋ Nova categoria</button>}
+      <div className="flex items-center gap-2 flex-wrap">
+        <h1 className="hidden lg:block text-xl font-bold flex-1">Categorias</h1>
+        {podeGerir && <button className="btn-primario flex-1 lg:flex-none" onClick={() => setEditar({})}>＋ Nova categoria</button>}
       </div>
       <p className="text-[13px] text-cinza">
         Cada categoria define o seu próprio ciclo de vida, critérios de obsolescência, rotina de manutenção e
@@ -35,7 +35,7 @@ export default function CategoriasPage() {
       {msg && <p className="text-vermelho text-sm">{msg}</p>}
 
       <div className="cartao envolvente-tabela overflow-x-auto">
-        <table className="w-full tabela-adaptavel md:min-w-[760px]">
+        <table className="w-full tabela-adaptavel lg:min-w-[760px]">
           <thead>
             <tr>
               <th className="th">Categoria</th><th className="th">Tipo</th><th className="th">Ciclo de vida</th>
@@ -52,7 +52,7 @@ export default function CategoriasPage() {
                 <td data-rotulo="Critérios" className="td text-[12px] text-cinza">≥ {c.falhasCriticas} falhas/6m · reparação &gt; {c.racioReparacao}%</td>
                 <td data-rotulo="Rotina" className="td text-[12px]">{c.rotinaMeses ? `${c.rotinaTarefa} (${c.rotinaMeses}m)` : '—'}</td>
                 <td data-rotulo="Itens" className="td font-mono">{c.totalItens}</td>
-                {podeGerir && <td data-accoes className="td text-right"><button className="btn-contorno !min-h-0 !px-2.5 !py-1 !text-[11px]" onClick={() => setEditar(c)}>Editar</button></td>}
+                {podeGerir && <td data-accoes className="td text-right"><button className="btn-contorno !min-h-0 btn-mini" onClick={() => setEditar(c)}>Editar</button></td>}
               </tr>
             ))}
           </tbody>
@@ -88,7 +88,7 @@ function FormCategoria({ categoria, fechar, feito }: any) {
 
   return (
     <Modal titulo={novo ? 'Nova categoria' : `Editar ${categoria.nome}`} fechar={fechar} rodape={
-      <><button className="btn-contorno" onClick={fechar}>Cancelar</button><button className="btn-primario" onClick={guardar}>Guardar</button></>
+      <><button className="btn-contorno" onClick={fechar}>Cancelar</button><button className="btn-primario flex-1 lg:flex-none" onClick={guardar}>Guardar</button></>
     }>
       <div className="space-y-3.5">
         <div className="grid sm:grid-cols-[1fr_auto] gap-3.5">
@@ -110,7 +110,7 @@ function FormCategoria({ categoria, fechar, feito }: any) {
 
         <fieldset className="border border-linha rounded-xl p-3.5">
           <legend className="text-[11.5px] font-semibold uppercase tracking-wide text-cinza px-1.5">Critérios de obsolescência</legend>
-          <div className="grid sm:grid-cols-3 gap-3">
+          <div className="grid lg:grid-cols-3 gap-3">
             <div>
               <label className="campo-rotulo">Ciclo de vida (meses)</label>
               <input className="campo-input" type="number" min={1} value={f.cicloVidaMeses} onChange={(e) => set('cicloVidaMeses', e.target.value)} />
@@ -164,7 +164,7 @@ function FormCategoria({ categoria, fechar, feito }: any) {
               </div>
             ))}
           </div>
-          <button className="btn-contorno !px-3 !py-1.5 !text-xs mt-2"
+          <button className="btn-contorno btn-mini mt-2"
             onClick={() => setCampos((s) => [...s, { chave: '', rotulo: '', tipo: 'texto' }])}>＋ Acrescentar campo</button>
         </fieldset>
 
@@ -183,7 +183,7 @@ function FormCategoria({ categoria, fechar, feito }: any) {
 function Modal({ titulo, children, rodape, fechar }: any) {
   return (
     <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="modal-caixa sm:max-w-2xl">
+      <div className="modal-caixa lg:max-w-2xl">
         <div className="modal-cabecalho">
           <h3 className="font-bold flex-1">{titulo}</h3>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>

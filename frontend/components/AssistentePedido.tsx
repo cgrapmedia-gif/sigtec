@@ -64,7 +64,7 @@ export default function AssistentePedido({ fechar, feito, sintomaInicial }: any)
 
   return (
     <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="modal-caixa sm:max-w-2xl">
+      <div className="modal-caixa lg:max-w-2xl">
         <div className="modal-cabecalho">
           <div className="flex-1">
             <h3 className="font-bold">Preciso de ajuda</h3>
@@ -138,9 +138,9 @@ export default function AssistentePedido({ fechar, feito, sintomaInicial }: any)
                   </li>
                 ))}
               </ol>
-              <div className="flex flex-col sm:flex-row gap-2.5">
-                <button className="btn-secundario sm:flex-1" onClick={resolvidoSozinho}>✓ Isto resolveu, obrigado</button>
-                <button className="btn-primario sm:flex-1"
+              <div className="flex flex-col lg:flex-row gap-2.5">
+                <button className="btn-secundario lg:flex-1" onClick={resolvidoSozinho}>✓ Isto resolveu, obrigado</button>
+                <button className="btn-primario lg:flex-1"
                   onClick={() => setPasso(perguntas.length ? 'perguntas' : 'confirmar')}>
                   O problema continua →
                 </button>

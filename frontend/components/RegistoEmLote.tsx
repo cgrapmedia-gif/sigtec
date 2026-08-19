@@ -49,7 +49,7 @@ export default function RegistoEmLote({ categorias, departamentos, fornecedores,
 
   return (
     <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="modal-caixa sm:max-w-2xl">
+      <div className="modal-caixa lg:max-w-2xl">
         <div className="modal-cabecalho">
           <div className="flex-1">
             <h3 className="font-bold">Registar vários itens</h3>
@@ -99,7 +99,7 @@ export default function RegistoEmLote({ categorias, departamentos, fornecedores,
                 automaticamente e em sequência.
               </p>
 
-              <div className="grid sm:grid-cols-2 gap-3.5">
+              <div className="grid lg:grid-cols-2 gap-3.5">
                 <SeletorComCriar rotulo="Categoria" valor={base.categoriaId} aoMudar={(v) => set('categoriaId', v)}
                   opcoes={categorias.filter((c: any) => c.tipo === base.tipo).map((c: any) => ({ id: c.id, nome: `${c.icone ?? ''} ${c.nome}`.trim() }))}
                   endpoint="/categorias" aoCriar={recarregar}

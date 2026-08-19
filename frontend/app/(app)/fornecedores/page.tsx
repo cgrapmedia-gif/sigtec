@@ -30,11 +30,11 @@ export default function FornecedoresPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="text-xl font-bold flex-1">Fornecedores &amp; Contratos</h1>
+      <div className="flex items-center gap-2 flex-wrap">
+        <h1 className="hidden lg:block text-xl font-bold flex-1">Fornecedores &amp; Contratos</h1>
         {podeGerir && <>
           <button className="btn-contorno" onClick={() => setEditarForn({})}>＋ Fornecedor</button>
-          <button className="btn-primario" onClick={() => setEditarCt({})}>＋ Contrato</button>
+          <button className="btn-primario flex-1 lg:flex-none" onClick={() => setEditarCt({})}>＋ Contrato</button>
         </>}
       </div>
       {msg && <p className="text-vermelho text-sm">{msg}</p>}
@@ -59,7 +59,7 @@ export default function FornecedoresPage() {
 
       <section className="cartao envolvente-tabela overflow-x-auto">
         <h2 className="text-[15px] font-bold mb-3">Contratos e subscrições</h2>
-        <table className="w-full tabela-adaptavel md:min-w-[760px]">
+        <table className="w-full tabela-adaptavel lg:min-w-[760px]">
           <thead>
             <tr>
               <th className="th">N.º</th><th className="th">Designação</th><th className="th">Fornecedor</th>
@@ -82,17 +82,17 @@ export default function FornecedoresPage() {
                   {c.slaHoras ? <span className="block text-cinza">SLA {c.slaHoras}h</span> : null}
                 </td>
                 <td data-rotulo="Estado" className="td"><span className={`pill ${ESTADO_CONTRATO[c.alerta.estado].classe}`}>{ESTADO_CONTRATO[c.alerta.estado].rotulo}</span></td>
-                {podeGerir && <td data-accoes className="td text-right"><button className="btn-contorno !min-h-0 !px-2.5 !py-1 !text-[11px]" onClick={() => setEditarCt(c)}>Editar</button></td>}
+                {podeGerir && <td data-accoes className="td text-right"><button className="btn-contorno !min-h-0 btn-mini" onClick={() => setEditarCt(c)}>Editar</button></td>}
               </tr>
             ))}
-            {contratos.length === 0 && <tr><td colSpan={7} className="td text-center text-cinza py-6">Nenhum contrato registado. Registe as ligações de internet, telefone, licenças e contratos de assistência.</td></tr>}
+            {contratos.length === 0 && <tr><td colSpan={7} className="td vazio">Nenhum contrato registado. Registe as ligações de internet, telefone, licenças e contratos de assistência.</td></tr>}
           </tbody>
         </table>
       </section>
 
       <section className="cartao envolvente-tabela overflow-x-auto">
         <h2 className="text-[15px] font-bold mb-3">Fornecedores</h2>
-        <table className="w-full tabela-adaptavel md:min-w-[680px]">
+        <table className="w-full tabela-adaptavel lg:min-w-[680px]">
           <thead>
             <tr><th className="th">Fornecedor</th><th className="th">Contacto</th><th className="th">Apoio técnico</th><th className="th">Contratos</th><th className="th">Itens</th>{podeGerir && <th className="th"></th>}</tr>
           </thead>
@@ -104,10 +104,10 @@ export default function FornecedoresPage() {
                 <td data-rotulo="Apoio técnico" className="td text-[12.5px] font-medium text-vermelho">{f.apoioTecnico ?? '—'}</td>
                 <td data-rotulo="Contratos" className="td font-mono">{f.contratos.length}</td>
                 <td data-rotulo="Itens" className="td font-mono">{f._count.itens}</td>
-                {podeGerir && <td data-accoes className="td text-right"><button className="btn-contorno !min-h-0 !px-2.5 !py-1 !text-[11px]" onClick={() => setEditarForn(f)}>Editar</button></td>}
+                {podeGerir && <td data-accoes className="td text-right"><button className="btn-contorno !min-h-0 btn-mini" onClick={() => setEditarForn(f)}>Editar</button></td>}
               </tr>
             ))}
-            {fornecedores.length === 0 && <tr><td colSpan={6} className="td text-center text-cinza py-6">Nenhum fornecedor registado.</td></tr>}
+            {fornecedores.length === 0 && <tr><td colSpan={6} className="td vazio">Nenhum fornecedor registado.</td></tr>}
           </tbody>
         </table>
       </section>
@@ -139,14 +139,14 @@ function FormFornecedor({ fornecedor, fechar, feito }: any) {
 
   return (
     <Modal titulo={novo ? 'Novo fornecedor' : `Editar ${fornecedor.nome}`} fechar={fechar} rodape={
-      <><button className="btn-contorno" onClick={fechar}>Cancelar</button><button className="btn-primario" onClick={guardar}>Guardar</button></>
+      <><button className="btn-contorno" onClick={fechar}>Cancelar</button><button className="btn-primario flex-1 lg:flex-none" onClick={guardar}>Guardar</button></>
     }>
       <div className="space-y-3.5">
         <div className="grid sm:grid-cols-[2fr_1fr] gap-3.5">
           <div><label className="campo-rotulo">Nome</label><input className="campo-input" value={f.nome} onChange={(e) => set('nome', e.target.value)} /></div>
           <div><label className="campo-rotulo">NIF</label><input className="campo-input" value={f.nif} onChange={(e) => set('nif', e.target.value)} /></div>
         </div>
-        <div className="grid sm:grid-cols-2 gap-3.5">
+        <div className="grid lg:grid-cols-2 gap-3.5">
           <div><label className="campo-rotulo">Pessoa de contacto</label><input className="campo-input" value={f.contactoNome} onChange={(e) => set('contactoNome', e.target.value)} /></div>
           <div><label className="campo-rotulo">Telefone</label><input className="campo-input" value={f.telefone} onChange={(e) => set('telefone', e.target.value)} /></div>
           <div><label className="campo-rotulo">Email</label><input className="campo-input" value={f.email} onChange={(e) => set('email', e.target.value)} /></div>
@@ -187,11 +187,11 @@ function FormContrato({ contrato, fornecedores, fechar, feito }: any) {
 
   return (
     <Modal titulo={novo ? 'Novo contrato' : `Editar ${contrato.numero}`} fechar={fechar} rodape={
-      <><button className="btn-contorno" onClick={fechar}>Cancelar</button><button className="btn-primario" onClick={guardar}>Guardar</button></>
+      <><button className="btn-contorno" onClick={fechar}>Cancelar</button><button className="btn-primario flex-1 lg:flex-none" onClick={guardar}>Guardar</button></>
     }>
       <div className="space-y-3.5">
         <div><label className="campo-rotulo">Designação</label><input className="campo-input" value={f.designacao} onChange={(e) => set('designacao', e.target.value)} placeholder="Ex.: Ligação de Internet dedicada 500 Mbps" /></div>
-        <div className="grid sm:grid-cols-2 gap-3.5">
+        <div className="grid lg:grid-cols-2 gap-3.5">
           <div>
             <label className="campo-rotulo">Fornecedor</label>
             <select className="campo-input" value={f.fornecedorId} onChange={(e) => set('fornecedorId', e.target.value)}>
@@ -229,7 +229,7 @@ function FormContrato({ contrato, fornecedores, fechar, feito }: any) {
 function Modal({ titulo, children, rodape, fechar }: any) {
   return (
     <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="modal-caixa sm:max-w-2xl">
+      <div className="modal-caixa lg:max-w-2xl">
         <div className="modal-cabecalho">
           <h3 className="font-bold flex-1">{titulo}</h3>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>

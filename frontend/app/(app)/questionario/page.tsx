@@ -27,7 +27,6 @@ export default function QuestionarioPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold">Questionário Técnico</h1>
       <p className="text-[13px] text-cinza">
         Questionário permanente à equipa técnica. As respostas alimentam o plano de investimento e de formação
         apresentado à Direcção.
@@ -58,7 +57,7 @@ export default function QuestionarioPage() {
             <input className="campo-input" value={f.formacao} onChange={(e) => set('formacao', e.target.value)} />
           </div>
           {sucesso && <p className="text-verde text-sm font-semibold">✓ Resposta registada. Obrigado pelo contributo.</p>}
-          <button className="btn-primario" onClick={enviar}>Enviar resposta</button>
+          <button className="btn-primario flex-1 lg:flex-none" onClick={enviar}>Enviar resposta</button>
         </section>
 
         <section className="cartao">

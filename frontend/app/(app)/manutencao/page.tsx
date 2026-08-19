@@ -33,10 +33,10 @@ export default function ManutencaoPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="text-xl font-bold flex-1">Manutenção Preventiva</h1>
+      <div className="flex items-center gap-2 flex-wrap">
+        <h1 className="hidden lg:block text-xl font-bold flex-1">Manutenção Preventiva</h1>
         <button className="btn-contorno" onClick={gerarRotinas}>🧭 Gerar rotinas do parque</button>
-        <button className="btn-primario" onClick={() => setNova({ assistido: true })}>＋ Nova ordem</button>
+        <button className="btn-primario flex-1 lg:flex-none" onClick={() => setNova({ assistido: true })}>＋ Nova ordem</button>
       </div>
       {msg && <p className="text-vermelho text-sm">{msg}</p>}
       {urgentes > 0 && (
@@ -44,7 +44,7 @@ export default function ManutencaoPage() {
           ⏰ <b className="text-dourado">Alerta automático:</b> {urgentes} equipamento(s) necessitam de manutenção dentro de 15 dias.
         </p>
       )}
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0">
+      <div className="separadores">
         <BotaoCat activa={filtroCat === ''} onClick={() => setFiltroCat('')} rotulo="Todas" total={ordens.length} />
         {Array.from(new Set(ordens.map((o) => o.categoria))).map((c) => (
           <BotaoCat key={c} activa={filtroCat === c} onClick={() => setFiltroCat(c)} rotulo={c}
@@ -68,7 +68,7 @@ export default function ManutencaoPage() {
                   {o.recorrenciaMeses ? <span className="pill bg-linha text-cinza ml-1.5">⟳ {o.recorrenciaMeses}m</span> : null}
                 </span>
               </div>
-              <button className="btn-contorno !px-3 !py-1.5 !text-xs" onClick={() => concluir(o.id)}>Concluir</button>
+              <button className="btn-contorno btn-mini" onClick={() => concluir(o.id)}>Concluir</button>
             </div>
           );
         })}
@@ -112,7 +112,7 @@ function NovaOrdem({ activos, assistido, fechar, feito }: any) {
 
   return (
     <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="modal-caixa sm:max-w-xl">
+      <div className="modal-caixa lg:max-w-xl">
         <div className="modal-cabecalho">
           <div className="flex-1">
             <h3 className="font-bold">Nova ordem de manutenção</h3>
@@ -152,7 +152,7 @@ function NovaOrdem({ activos, assistido, fechar, feito }: any) {
             <label className="campo-rotulo">Tarefa</label>
             <input className="campo-input" value={tarefa} onChange={(e) => setTarefa(e.target.value)} placeholder="Ex.: Substituição de baterias da UPS" />
           </div>
-          <div className="grid sm:grid-cols-2 gap-3.5">
+          <div className="grid lg:grid-cols-2 gap-3.5">
             <div>
               <label className="campo-rotulo">Categoria</label>
               <select className="campo-input" value={categoria} onChange={(e) => setCategoria(e.target.value)}>
@@ -189,7 +189,7 @@ function NovaOrdem({ activos, assistido, fechar, feito }: any) {
         </div>
         <div className="modal-rodape">
           <button className="btn-contorno" onClick={fechar}>Cancelar</button>
-          {modo === 'completo' && <button className="btn-primario" onClick={criar} disabled={aGuardar}>{aGuardar ? 'A criar…' : 'Criar ordem'}</button>}
+          {modo === 'completo' && <button className="btn-primario flex-1 lg:flex-none" onClick={criar} disabled={aGuardar}>{aGuardar ? 'A criar…' : 'Criar ordem'}</button>}
         </div>
       </div>
     </div>
@@ -200,9 +200,7 @@ function NovaOrdem({ activos, assistido, fechar, feito }: any) {
 function BotaoCat({ activa, onClick, rotulo, total }: any) {
   return (
     <button onClick={onClick}
-      className={`shrink-0 px-3.5 py-2.5 rounded-xl border text-left transition min-h-[44px] ${
-        activa ? 'bg-preto text-white border-preto' : 'bg-white border-linha hover:border-dourado'
-      }`}>
+      className={`separador ${activa ? 'activo' : ''}`}>
       <span className="block text-[12.5px] font-semibold whitespace-nowrap">{rotulo}</span>
       <span className={`block text-[10.5px] ${activa ? 'text-douradoClaro' : 'text-cinza'}`}>{total} ordem(ns)</span>
     </button>

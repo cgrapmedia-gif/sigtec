@@ -47,9 +47,9 @@ export default function PedidosPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="text-xl font-bold flex-1">Pedidos Técnicos</h1>
-        <button className="btn-primario" onClick={() => setAssistente(true)}>🛠 Preciso de ajuda</button>
+      <div className="flex items-center gap-2 flex-wrap">
+        <h1 className="hidden lg:block text-xl font-bold flex-1">Pedidos Técnicos</h1>
+        <button className="btn-primario flex-1 lg:flex-none" onClick={() => setAssistente(true)}>🛠 Preciso de ajuda</button>
         {podeGerir && <button className="btn-contorno" onClick={() => setNovo(true)}>Registo manual</button>}
       </div>
 
@@ -88,7 +88,7 @@ export default function PedidosPage() {
       </div>
 
       <div className="cartao envolvente-tabela overflow-x-auto">
-        <table className="w-full tabela-adaptavel md:min-w-[640px]">
+        <table className="w-full tabela-adaptavel lg:min-w-[640px]">
           <thead><tr><th className="th">N.º</th><th className="th">Assunto</th><th className="th">Prioridade / SLA</th><th className="th">Estado</th><th className="th">Data</th></tr></thead>
           <tbody>
             {lista.map((p) => (
@@ -115,7 +115,7 @@ export default function PedidosPage() {
               </tr>
             ))}
             {lista.length === 0 && (
-              <tr><td colSpan={5} className="td text-center text-cinza py-8">
+              <tr><td colSpan={5} className="td vazio">
                 {vista === 'abertos'
                   ? 'Nenhum pedido em curso nesta categoria. Veja o histórico para os já resolvidos.'
                   : 'Sem pedidos nesta categoria.'}
@@ -166,9 +166,9 @@ function NovoPedido({ activos, user, fechar, feito }: any) {
 
   return (
     <Modal titulo="Abrir pedido técnico online" fechar={fechar} rodape={
-      <><button className="btn-contorno" onClick={fechar}>Cancelar</button><button className="btn-primario" onClick={submeter}>Submeter pedido</button></>
+      <><button className="btn-contorno" onClick={fechar}>Cancelar</button><button className="btn-primario flex-1 lg:flex-none" onClick={submeter}>Submeter pedido</button></>
     }>
-      <div className="grid sm:grid-cols-2 gap-3.5 mb-3.5">
+      <div className="grid lg:grid-cols-2 gap-3.5 mb-3.5">
         <div>
           <label className="campo-rotulo">Requerente</label>
           <input className="campo-input bg-[#FDFBF3] border-douradoClaro" value={`${user?.nome} — ${user?.departamento ?? ''}`} disabled />
@@ -190,7 +190,7 @@ function NovoPedido({ activos, user, fechar, feito }: any) {
           </p>
         )}
       </div>
-      <div className="grid sm:grid-cols-2 gap-3.5 mb-3.5">
+      <div className="grid lg:grid-cols-2 gap-3.5 mb-3.5">
         <div>
           <label className="campo-rotulo">Categoria</label>
           <select className="campo-input" value={categoria} onChange={(e) => setCategoria(e.target.value)}>
@@ -254,7 +254,7 @@ function DetalhePedido({ pedido, podeGerir, fechar, feito }: any) {
       <><button className="btn-contorno" onClick={fechar}>Fechar janela</button>{podeGerir && <button className="btn-secundario" onClick={guardar}>Guardar actualização</button>}</>
     }>
       <h3 className="text-[17px] font-semibold mb-3">{pedido.assunto}</h3>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-[13px] mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 text-[13px] mb-4">
         <Info rotulo="Categoria" valor={pedido.categoria} />
         <Info rotulo="Prioridade / SLA" valor={`${PRIORIDADE[pedido.prioridade].rotulo} · ${pedido.slaHoras}h`} />
         <Info rotulo="Estado" valor={ESTADO_PEDIDO[pedido.estado].rotulo} />
@@ -311,7 +311,7 @@ function Info({ rotulo, valor, mono }: { rotulo: string; valor: string; mono?: b
 function Modal({ titulo, children, rodape, fechar }: any) {
   return (
     <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="modal-caixa sm:max-w-2xl">
+      <div className="modal-caixa lg:max-w-2xl">
         <div className="modal-cabecalho">
           <h3 className="font-bold flex-1 font-mono text-vermelho">{titulo}</h3>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>
@@ -357,7 +357,7 @@ function ModalAvaliacao({ pedido, fechar, feito }: any) {
     <Modal titulo={`Avaliar o atendimento — #${pedido.numero}`} fechar={fechar} rodape={
       <>
         <button className="btn-contorno" onClick={fechar}>Agora não</button>
-        <button className="btn-primario" onClick={enviar} disabled={aGuardar}>{aGuardar ? 'A enviar…' : 'Enviar avaliação'}</button>
+        <button className="btn-primario flex-1 lg:flex-none" onClick={enviar} disabled={aGuardar}>{aGuardar ? 'A enviar…' : 'Enviar avaliação'}</button>
       </>
     }>
       <p className="text-[13px] mb-4">Como classifica a resolução de <b>{pedido.assunto}</b>?</p>
@@ -386,9 +386,7 @@ function ModalAvaliacao({ pedido, fechar, feito }: any) {
 function BotaoCategoria({ activa, onClick, rotulo, total, abertos }: any) {
   return (
     <button onClick={onClick}
-      className={`shrink-0 px-3.5 py-2.5 rounded-xl border text-left transition min-h-[44px] ${
-        activa ? 'bg-preto text-white border-preto' : 'bg-white border-linha hover:border-dourado'
-      }`}>
+      className={`separador ${activa ? 'activo' : ''}`}>
       <span className="block text-[12.5px] font-semibold whitespace-nowrap">{rotulo}</span>
       <span className={`block text-[10.5px] ${activa ? 'text-douradoClaro' : 'text-cinza'}`}>
         {abertos > 0 ? `${abertos} em curso` : `${total} no total`}

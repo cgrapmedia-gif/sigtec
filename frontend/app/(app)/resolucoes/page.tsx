@@ -16,9 +16,9 @@ export default function ResolucoesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="text-xl font-bold flex-1">Procedimentos de Resolução</h1>
-        <button className="btn-primario" onClick={() => setEditar({})}>＋ Novo procedimento</button>
+      <div className="flex items-center gap-2 flex-wrap">
+        <h1 className="hidden lg:block text-xl font-bold flex-1">Procedimentos de Resolução</h1>
+        <button className="btn-primario flex-1 lg:flex-none" onClick={() => setEditar({})}>＋ Novo procedimento</button>
       </div>
       <p className="text-[13px] text-cinza">
         Procedimentos conhecidos por fabricante e categoria. São sugeridos ao técnico quando abre um pedido
@@ -83,7 +83,7 @@ function FormResolucao({ resolucao, fechar, feito }: any) {
 
   return (
     <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="modal-caixa md:max-w-2xl">
+      <div className="modal-caixa lg:max-w-2xl">
         <div className="modal-cabecalho">
           <h3 className="font-bold flex-1">{novo ? 'Novo procedimento' : 'Editar procedimento'}</h3>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>
@@ -94,7 +94,7 @@ function FormResolucao({ resolucao, fechar, feito }: any) {
             <input className="campo-input" value={f.titulo} onChange={(e) => set('titulo', e.target.value)}
               placeholder="Ex.: HP LaserJet — reposição do serviço de impressão" />
           </div>
-          <div className="grid md:grid-cols-2 gap-3.5">
+          <div className="grid lg:grid-cols-2 gap-3.5">
             <div>
               <label className="campo-rotulo">Marca (opcional)</label>
               <input className="campo-input" value={f.marca} onChange={(e) => set('marca', e.target.value)} placeholder="Ex.: HP" />
@@ -122,9 +122,9 @@ function FormResolucao({ resolucao, fechar, feito }: any) {
                 <button className="text-vermelho px-2" onClick={() => setPassos((s) => s.filter((_, j) => j !== i))}>✕</button>
               </div>
             ))}
-            <button className="btn-contorno !min-h-0 !px-3 !py-1.5 !text-xs" onClick={() => setPassos((s) => [...s, ''])}>＋ Passo</button>
+            <button className="btn-contorno btn-mini" onClick={() => setPassos((s) => [...s, ''])}>＋ Passo</button>
           </fieldset>
-          <div className="grid md:grid-cols-3 gap-3.5">
+          <div className="grid lg:grid-cols-3 gap-3.5">
             <div>
               <label className="campo-rotulo">Peça provável</label>
               <input className="campo-input" value={f.pecaProvavel} onChange={(e) => set('pecaProvavel', e.target.value)} />
@@ -148,7 +148,7 @@ function FormResolucao({ resolucao, fechar, feito }: any) {
         </div>
         <div className="modal-rodape">
           <button className="btn-contorno" onClick={fechar}>Cancelar</button>
-          <button className="btn-primario" onClick={guardar}>Guardar</button>
+          <button className="btn-primario flex-1 lg:flex-none" onClick={guardar}>Guardar</button>
         </div>
       </div>
     </div>

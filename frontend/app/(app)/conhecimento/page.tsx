@@ -29,9 +29,9 @@ export default function ConhecimentoPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="text-xl font-bold flex-1">Base de Conhecimento</h1>
-        {podeEscrever && <button className="btn-primario" onClick={() => setEditar({})}>＋ Novo artigo</button>}
+      <div className="flex items-center gap-2 flex-wrap">
+        <h1 className="hidden lg:block text-xl font-bold flex-1">Base de Conhecimento</h1>
+        {podeEscrever && <button className="btn-primario flex-1 lg:flex-none" onClick={() => setEditar({})}>＋ Novo artigo</button>}
       </div>
       <p className="text-[13px] text-cinza">
         Soluções para os problemas mais frequentes. Consulte antes de abrir um pedido — muitas situações resolvem-se em minutos.
@@ -45,7 +45,7 @@ export default function ConhecimentoPage() {
         </select>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-3.5">
+      <div className="grid lg:grid-cols-2 gap-3.5">
         {artigos.map((a) => (
           <button key={a.id} onClick={() => api(`/conhecimento/${a.id}`).then(setAberto).catch((e) => setMsg(e.message))}
             className="cartao text-left hover:border-dourado transition">
@@ -110,7 +110,7 @@ function FormArtigo({ artigo, fechar, feito }: any) {
     <Modal titulo={novo ? 'Novo artigo' : 'Editar artigo'} fechar={fechar} rodape={
       <>
         <button className="btn-contorno" onClick={fechar}>Cancelar</button>
-        <button className="btn-primario" onClick={guardar} disabled={aGuardar}>{aGuardar ? 'A guardar…' : 'Guardar artigo'}</button>
+        <button className="btn-primario flex-1 lg:flex-none" onClick={guardar} disabled={aGuardar}>{aGuardar ? 'A guardar…' : 'Guardar artigo'}</button>
       </>
     }>
       <div className="space-y-3.5">
@@ -143,7 +143,7 @@ function FormArtigo({ artigo, fechar, feito }: any) {
 function Modal({ titulo, children, rodape, fechar }: any) {
   return (
     <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="modal-caixa sm:max-w-2xl">
+      <div className="modal-caixa lg:max-w-2xl">
         <div className="modal-cabecalho">
           <h3 className="font-bold flex-1">{titulo}</h3>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>

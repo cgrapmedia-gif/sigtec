@@ -59,20 +59,20 @@ export default function ActivosPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="text-xl font-bold flex-1">Itens de Configuração</h1>
+      <div className="flex items-center gap-2 flex-wrap">
+        <h1 className="hidden lg:block text-xl font-bold flex-1">Itens de Configuração</h1>
         <button className="btn-contorno" onClick={() => setEtiquetas(lista)}>🏷 Etiquetas QR ({lista.length})</button>
         {podeGerir && (
           <>
-            <button className="btn-contorno" onClick={() => setLote(true)}>⧉ Registar vários</button>
-            <button className="btn-primario" onClick={() => setEditar({ assistido: true })}>＋ Registar item</button>
+            <button className="btn-contorno flex-1 lg:flex-none" onClick={() => setLote(true)}>⧉ Registar vários</button>
+            <button className="btn-primario flex-1 lg:flex-none" onClick={() => setEditar({ assistido: true })}>＋ Registar item</button>
           </>
         )}
       </div>
       {erro && <p className="text-vermelho text-sm">{erro}</p>}
 
       {/* Separadores por categoria — a mesma lógica dos pedidos, em todo o sistema */}
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0">
+      <div className="separadores">
         <BotaoFiltro activa={filtroCat === ''} onClick={() => setFiltroCat('')} rotulo="Todas" total={activos.length} />
         {cats.map((c) => (
           <BotaoFiltro key={c} activa={filtroCat === c} onClick={() => setFiltroCat(c)} rotulo={c}
@@ -94,7 +94,7 @@ export default function ActivosPage() {
       </div>
 
       <div className="cartao envolvente-tabela overflow-x-auto">
-        <table className="w-full tabela-adaptavel md:min-w-[720px]">
+        <table className="w-full tabela-adaptavel lg:min-w-[720px]">
           <thead>
             <tr>
               <th className="th">Inventário</th><th className="th">Equipamento</th><th className="th">Localização</th>
@@ -124,14 +124,14 @@ export default function ActivosPage() {
                 </td>
                 {podeGerir && (
                   <td data-accoes className="td text-right whitespace-nowrap">
-                    <button className="btn-contorno !min-h-0 !px-2.5 !py-1 !text-[11px] mr-1"
+                    <button className="btn-contorno !min-h-0 btn-mini mr-1"
                       onClick={() => api(`/activos/${a.id}/impacto`).then(setImpacto).catch((e) => setErro(e.message))}>Impacto</button>
-                    <button className="btn-contorno !min-h-0 !px-2.5 !py-1 !text-[11px]" onClick={() => setEditar(a)}>Editar</button>
+                    <button className="btn-contorno !min-h-0 btn-mini" onClick={() => setEditar(a)}>Editar</button>
                   </td>
                 )}
               </tr>
             ))}
-            {lista.length === 0 && <tr><td colSpan={7} className="td text-center text-cinza py-6">Nenhum activo corresponde à pesquisa.</td></tr>}
+            {lista.length === 0 && <tr><td colSpan={7} className="td vazio">Nenhum activo corresponde à pesquisa.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -199,7 +199,7 @@ function FichaActivo({ activo, fechar, recarregar, todosItens }: any) {
   const podeGerirFicha = pode('itens.relacoes.gerir');
   return (
     <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="modal-caixa sm:max-w-2xl">
+      <div className="modal-caixa lg:max-w-2xl">
         <div className="modal-cabecalho">
           <h3 className="font-bold flex-1">Ficha de equipamento</h3>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>
@@ -227,7 +227,7 @@ function FichaActivo({ activo, fechar, recarregar, todosItens }: any) {
               )}
             </div>
           )}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-[13px] mb-4">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 text-[13px] mb-4">
             <F r="Categoria" v={activo.categoria} />
             <F r="N.º de série" v={activo.numSerie ?? '—'} mono />
             <F r="Estado" v={ESTADO_ACTIVO[activo.estado].rotulo} />
@@ -243,7 +243,7 @@ function FichaActivo({ activo, fechar, recarregar, todosItens }: any) {
           {campos.length > 0 && (
             <div className="mb-4">
               <p className="text-[13px] font-bold uppercase tracking-wide text-cinza mb-2">Campos da categoria</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-[13px]">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 text-[13px]">
                 {campos.map((c: any) => <F key={c.chave} r={c.rotulo} v={String(valores[c.chave] ?? '—')} />)}
               </div>
             </div>
@@ -294,7 +294,7 @@ function FichaActivo({ activo, fechar, recarregar, todosItens }: any) {
                     </div>
                   </div>
                 ) : (
-                  <button className="btn-contorno !min-h-0 !px-3 !py-1.5 !text-xs mt-2" onClick={() => setARelacionar(true)}>
+                  <button className="btn-contorno btn-mini mt-2" onClick={() => setARelacionar(true)}>
                     ＋ Acrescentar dependência
                   </button>
                 )
@@ -319,7 +319,7 @@ function FichaActivo({ activo, fechar, recarregar, todosItens }: any) {
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             <p className="text-[13px] font-bold uppercase tracking-wide text-cinza flex-1">Histórico técnico</p>
             {podeGerirFicha && !aRegistar && (
-              <button className="btn-contorno !min-h-0 !px-3 !py-1.5 !text-xs" onClick={() => setARegistar(true)}>＋ Registar intervenção</button>
+              <button className="btn-contorno btn-mini" onClick={() => setARegistar(true)}>＋ Registar intervenção</button>
             )}
           </div>
           {aRegistar && (
@@ -414,7 +414,7 @@ function FormActivo({ activo, departamentos, categorias, fornecedores, contratos
 
   return (
     <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="modal-caixa sm:max-w-2xl">
+      <div className="modal-caixa lg:max-w-2xl">
         <div className="modal-cabecalho">
           <div className="flex-1">
             <h3 className="font-bold">{novo ? 'Registar item de configuração' : `Editar ${activo.numInventario}`}</h3>
@@ -441,7 +441,7 @@ function FormActivo({ activo, departamentos, categorias, fornecedores, contratos
               <p className="text-[11px] text-dourado mt-1">✓ O sistema atribui o próximo número livre da série CGA-INF-XXXX</p>
             </div>
           )}
-          <div className="grid sm:grid-cols-2 gap-3.5">
+          <div className="grid lg:grid-cols-2 gap-3.5">
             <div>
               <label className="campo-rotulo">Tipo de item</label>
               <select className="campo-input" value={f.tipo} onChange={(e) => set('tipo', e.target.value)}>
@@ -458,7 +458,7 @@ function FormActivo({ activo, departamentos, categorias, fornecedores, contratos
                 { chave: 'cicloVidaMeses', rotulo: 'Ciclo de vida (meses)', tipo: 'numero', valorInicial: '60' },
                 { chave: 'icone', rotulo: 'Ícone', valorInicial: '🔧' },
               ]} />
-            <div className="sm:col-span-2">
+            <div className="lg:col-span-2">
               <label className="campo-rotulo">Designação {f.tipo === 'EQUIPAMENTO' && '(opcional)'}</label>
               <input className="campo-input" value={f.designacao} onChange={(e) => set('designacao', e.target.value)}
                 placeholder={f.tipo === 'SERVICO' ? 'Ex.: Ligação de Internet dedicada — sede' : 'Descrição do item'} />
@@ -557,7 +557,7 @@ function FormActivo({ activo, departamentos, categorias, fornecedores, contratos
               <legend className="text-[11.5px] font-semibold uppercase tracking-wide text-cinza px-1.5">
                 Campos de «{catSeleccionada.nome}»
               </legend>
-              <div className="grid sm:grid-cols-2 gap-3.5">
+              <div className="grid lg:grid-cols-2 gap-3.5">
                 {esquema.map((c: any) => (
                   <div key={c.chave}>
                     <label className="campo-rotulo">{c.rotulo}</label>
@@ -579,7 +579,7 @@ function FormActivo({ activo, departamentos, categorias, fornecedores, contratos
         </div>
         <div className="modal-rodape">
           <button className="btn-contorno" onClick={fechar}>Cancelar</button>
-          <button className="btn-primario" onClick={guardar} disabled={aGuardar}>{aGuardar ? 'A guardar…' : novo ? 'Registar activo' : 'Guardar alterações'}</button>
+          <button className="btn-primario flex-1 lg:flex-none" onClick={guardar} disabled={aGuardar}>{aGuardar ? 'A guardar…' : novo ? 'Registar activo' : 'Guardar alterações'}</button>
         </div>
       </div>
     </div>
@@ -609,7 +609,7 @@ function Etiquetas({ activos, fechar }: any) {
 
   return (
     <div className="modal-fundo print:p-0 print:bg-white" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="modal-caixa sm:max-w-3xl print:shadow-none print:max-w-none print:rounded-none">
+      <div className="modal-caixa lg:max-w-3xl print:shadow-none print:max-w-none print:rounded-none">
         <div className="modal-cabecalho print:hidden">
           <h3 className="font-bold flex-1">Etiquetas de inventário ({activos.length})</h3>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>
@@ -620,7 +620,7 @@ function Etiquetas({ activos, fechar }: any) {
             Imprima em papel autocolante e cole no equipamento.
           </p>
           {!prontos && <p className="text-sm text-cinza">A gerar códigos QR…</p>}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {activos.map((a: any) => (
               <div key={a.id} className="border border-preto rounded-lg p-2.5 flex gap-2.5 items-center">
                 {codigos[a.id] && <img src={codigos[a.id]} alt={a.numInventario} className="w-16 h-16 shrink-0" />}
@@ -656,7 +656,7 @@ function F({ r, v, mono }: { r: string; v: string; mono?: boolean }) {
 function ModalImpacto({ dados, fechar }: any) {
   return (
     <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="modal-caixa sm:max-w-2xl">
+      <div className="modal-caixa lg:max-w-2xl">
         <div className="modal-cabecalho">
           <h3 className="font-bold flex-1">Análise de impacto</h3>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>
@@ -673,18 +673,18 @@ function ModalImpacto({ dados, fechar }: any) {
                 ⚠ {dados.totalAfectados} item(ns) afectado(s){dados.criticos > 0 && `, dos quais ${dados.criticos} crítico(s)`}.
                 {dados.criticos > 0 && ' Planear janela de intervenção fora do horário de atendimento.'}
               </p>
-              <table className="w-full">
+              <table className="w-full tabela-adaptavel">
                 <thead><tr><th className="th">Item</th><th className="th">Localização</th><th className="th">Via</th><th className="th">Nível</th></tr></thead>
                 <tbody>
                   {dados.afectados.map((a: any) => (
                     <tr key={a.id}>
-                      <td className="td">
+                      <td data-principal className="td">
                         <span className="font-mono text-xs font-semibold">{a.numInventario}</span>
                         <span className="block text-[12px]">{a.designacao || `${a.marca} ${a.modelo}`}</span>
                       </td>
-                      <td className="td text-[12px]">{a.localizacao}</td>
-                      <td className="td text-[12px] text-cinza">{RELACOES[a.viaRelacao]}</td>
-                      <td className="td">
+                      <td data-rotulo="Localização" className="td text-[12px]">{a.localizacao}</td>
+                      <td data-rotulo="Via" className="td text-[12px] text-cinza">{RELACOES[a.viaRelacao]}</td>
+                      <td data-rotulo="Nível" className="td">
                         {a.critica || a.criticidade >= 4
                           ? <span className="pill bg-vermelho/10 text-vermelho">crítico</span>
                           : <span className="pill bg-linha text-cinza">nível {a.nivel}</span>}
@@ -709,9 +709,7 @@ function ModalImpacto({ dados, fechar }: any) {
 function BotaoFiltro({ activa, onClick, rotulo, total, icone }: any) {
   return (
     <button onClick={onClick}
-      className={`shrink-0 px-3.5 py-2.5 rounded-xl border text-left transition min-h-[44px] ${
-        activa ? 'bg-preto text-white border-preto' : 'bg-white border-linha hover:border-dourado'
-      }`}>
+      className={`separador ${activa ? 'activo' : ''}`}>
       <span className="block text-[12.5px] font-semibold whitespace-nowrap">{icone ? `${icone} ` : ''}{rotulo}</span>
       <span className={`block text-[10.5px] ${activa ? 'text-douradoClaro' : 'text-cinza'}`}>{total} item(ns)</span>
     </button>

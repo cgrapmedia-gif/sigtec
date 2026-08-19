@@ -18,7 +18,6 @@ export default function TransparenciaPage() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-xl font-bold">Transparência</h1>
       <p className="text-[13px] bg-gradient-to-br from-[#FDF9EE] to-[#F7EFD8] border border-douradoClaro border-l-4 border-l-dourado rounded-lg p-3.5">
         ◉ <b className="text-dourado">Transparência por omissão (modelo estónio):</b> tal como o cidadão da Estónia vê quem
         consultou os seus dados no Estado, aqui cada funcionário vê quem acedeu e quem alterou os seus pedidos e registos.
@@ -26,23 +25,23 @@ export default function TransparenciaPage() {
       {msg && <p className="text-vermelho text-sm">{msg}</p>}
 
       <div className="grid lg:grid-cols-2 gap-5 items-start">
-        <section className="cartao">
+        <section className="cartao envolvente-tabela">
           <h2 className="text-[15px] font-bold mb-1 flex items-center gap-2">
             {funcionario ? 'O meu Data Tracker' : 'Registo de auditoria global'}
             <span className="text-[9.5px] bg-preto text-douradoClaro px-2 py-0.5 rounded-full tracking-wider">DATA TRACKER</span>
           </h2>
           <p className="text-xs text-cinza mb-3">{funcionario ? 'Quem acedeu aos meus dados.' : 'Todas as acções registadas no sistema.'}</p>
-          <table className="w-full">
+          <table className="w-full tabela-adaptavel">
             <thead><tr><th className="th">Quando</th><th className="th">Quem</th><th className="th">Acção</th></tr></thead>
             <tbody>
               {acessos.map((a) => (
                 <tr key={a.id}>
-                  <td className="td font-mono text-[11.5px] whitespace-nowrap">{fmtDataHora(a.quando)}</td>
-                  <td className="td text-[12.5px] font-medium">{a.quemNome}<span className="block text-[10.5px] text-cinza">{a.quemPerfil}</span></td>
-                  <td className="td text-[12.5px]">{a.accao}</td>
+                  <td data-rotulo="Quando" className="td font-mono text-[11.5px] whitespace-nowrap">{fmtDataHora(a.quando)}</td>
+                  <td data-rotulo="Quem" className="td text-[12.5px] font-medium">{a.quemNome}<span className="block text-[10.5px] text-cinza">{a.quemPerfil}</span></td>
+                  <td data-rotulo="Acção" className="td text-[12.5px] block">{a.accao}</td>
                 </tr>
               ))}
-              {acessos.length === 0 && <tr><td colSpan={3} className="td text-cinza py-5 text-center">Sem registos por enquanto. Cada acesso e alteração ficará listado aqui.</td></tr>}
+              {acessos.length === 0 && <tr><td colSpan={3} className="td vazio">Sem registos por enquanto. Cada acesso e alteração ficará listado aqui.</td></tr>}
             </tbody>
           </table>
           <p className="text-[11.5px] text-cinza mt-2.5">Registo imutável — nenhuma entrada pode ser editada ou apagada, nem pelo Administrador.</p>
@@ -61,12 +60,12 @@ export default function TransparenciaPage() {
           </div>
           <div className="cartao">
             <h2 className="text-[15px] font-bold mb-3">Digitalização do Consulado</h2>
-            <table className="w-full text-[13px]">
+            <table className="w-full text-[13px] tabela-adaptavel">
               <tbody>
-                <tr><td className="td font-medium">Processos nascidos digitais</td><td className="td text-right font-mono font-bold text-verde">{kpi ? `${kpi.percentagemDigital}%` : '…'}</td></tr>
-                <tr><td className="td font-medium">Folhas de papel evitadas</td><td className="td text-right font-mono font-bold">{kpi ? kpi.folhasEvitadas.toLocaleString('pt-PT') : '…'}</td></tr>
-                <tr><td className="td font-medium">Tempo administrativo poupado</td><td className="td text-right font-mono font-bold">{kpi ? `${kpi.horasPoupadas}h` : '…'}</td></tr>
-                <tr><td className="td font-medium">Registos de auditoria</td><td className="td text-right font-mono font-bold">{kpi ? kpi.registosAuditoria.toLocaleString('pt-PT') : '…'}</td></tr>
+                <tr><td data-rotulo="Indicador" className="td font-medium">Processos nascidos digitais</td><td data-rotulo="Valor" className="td text-right font-mono font-bold text-verde">{kpi ? `${kpi.percentagemDigital}%` : '…'}</td></tr>
+                <tr><td data-rotulo="Indicador" className="td font-medium">Folhas de papel evitadas</td><td data-rotulo="Valor" className="td text-right font-mono font-bold">{kpi ? kpi.folhasEvitadas.toLocaleString('pt-PT') : '…'}</td></tr>
+                <tr><td data-rotulo="Indicador" className="td font-medium">Tempo administrativo poupado</td><td data-rotulo="Valor" className="td text-right font-mono font-bold">{kpi ? `${kpi.horasPoupadas}h` : '…'}</td></tr>
+                <tr><td data-rotulo="Indicador" className="td font-medium">Registos de auditoria</td><td data-rotulo="Valor" className="td text-right font-mono font-bold">{kpi ? kpi.registosAuditoria.toLocaleString('pt-PT') : '…'}</td></tr>
               </tbody>
             </table>
             <p className="text-[11px] text-cinza mt-2">

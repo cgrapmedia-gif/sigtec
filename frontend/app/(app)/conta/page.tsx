@@ -40,7 +40,6 @@ export default function ContaPage() {
 
   return (
     <div className="space-y-5 max-w-xl">
-      <h1 className="text-xl font-bold">A Minha Conta</h1>
 
       {user.precisaTrocarPassword && (
         <p className="text-[13px] bg-gradient-to-br from-[#FDF9EE] to-[#F7EFD8] border border-douradoClaro border-l-4 border-l-vermelho rounded-lg p-3.5">
@@ -51,7 +50,7 @@ export default function ContaPage() {
 
       <section className="cartao space-y-3">
         <h2 className="text-[15px] font-bold">Dados da conta</h2>
-        <div className="grid sm:grid-cols-2 gap-3 text-[13px]">
+        <div className="grid lg:grid-cols-2 gap-3 text-[13px]">
           <div><p className="text-[10.5px] uppercase tracking-wide text-cinza font-semibold">Nome</p><p className="font-medium">{user.nome}</p></div>
           <div><p className="text-[10.5px] uppercase tracking-wide text-cinza font-semibold">Utilizador</p><p className="font-medium font-mono">{user.utilizador ?? user.email?.split('@')[0]}</p></div>
           <div><p className="text-[10.5px] uppercase tracking-wide text-cinza font-semibold">Perfil</p><p className="font-medium">{user.perfil}</p></div>
@@ -76,7 +75,7 @@ export default function ContaPage() {
         </div>
         {erro && <p className="text-vermelho text-sm">{erro}</p>}
         {sucesso && <p className="text-verde text-sm font-semibold">✓ Palavra-passe alterada. A redireccionar…</p>}
-        <button className="btn-primario" onClick={guardar} disabled={aGuardar}>
+        <button className="btn-primario flex-1 lg:flex-none" onClick={guardar} disabled={aGuardar}>
           {aGuardar ? 'A guardar…' : 'Guardar nova palavra-passe'}
         </button>
       </section>
