@@ -5,6 +5,7 @@
  */
 import { PrismaClient, Perfil, EstadoActivo, EstadoPedido, Prioridade, EstadoProposta } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { SINTOMAS } from './sintomas';
 
 const prisma = new PrismaClient();
 
@@ -285,6 +286,21 @@ async function main() {
         },
       ],
     });
+  }
+
+  // Catálogo de sintomas em linguagem comum
+  if ((await prisma.sintoma.count()) === 0) {
+    for (const s of SINTOMAS) {
+      await prisma.sintoma.create({
+        data: {
+          grupo: s.grupo, rotulo: s.rotulo, icone: s.icone, descricaoAjuda: s.descricaoAjuda ?? null,
+          perguntas: (s.perguntas ?? []) as any, passosAutoAjuda: (s.passosAutoAjuda ?? []) as any,
+          prioridadeSugerida: s.prioridadeSugerida as any, categoriaTecnica: s.categoriaTecnica,
+          diagnosticoProvavel: s.diagnosticoProvavel ?? null, ordem: s.ordem,
+        },
+      });
+    }
+    console.log(`  ${SINTOMAS.length} sintomas catalogados.`);
   }
 
   console.log('Seed concluído. Contas (password: sigtec2026):');

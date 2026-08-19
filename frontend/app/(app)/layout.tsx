@@ -18,6 +18,7 @@ const NAV = [
   { href: '/categorias', nome: 'Categorias', ico: '🏷', grupo: 'Configuração', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO'] },
   { href: '/fornecedores', nome: 'Fornecedores & Contratos', ico: '🤝', grupo: 'Configuração', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO'] },
   { href: '/departamentos', nome: 'Departamentos', ico: '🏛', grupo: 'Configuração', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO'] },
+  { href: '/sintomas', nome: 'Catálogo de Sintomas', ico: '🩺', grupo: 'Configuração', perfis: ['ADMIN', 'TECNICO'] },
   { href: '/utilizadores', nome: 'Utilizadores', ico: '👤', grupo: 'Administração', perfis: ['ADMIN', 'DIRECCAO'] },
   { href: '/permissoes', nome: 'Quadro de Permissões', ico: '🔒', grupo: 'Administração', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO', 'FUNCIONARIO'] },
   { href: '/conta', nome: 'A Minha Conta', ico: '🔑', grupo: 'Administração', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO', 'FUNCIONARIO'] },

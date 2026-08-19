@@ -87,6 +87,79 @@ export class PedidosService {
     return { ...p, sla: this.calcularSla(p) };
   }
 
+  /**
+   * Criação a partir de um sintoma escolhido do catálogo.
+   * O requerente não precisa de saber categoria nem prioridade: o sistema deriva-as,
+   * monta o assunto e compõe a descrição a partir das respostas dadas por toque.
+   */
+  async criarPorSintoma(
+    dto: { sintomaId: string; respostas?: Record<string, string>; activoId?: string; observacoes?: string },
+    user: { id: string; nome: string; perfil: string },
+  ) {
+    const sintoma = await this.prisma.sintoma.findUnique({ where: { id: dto.sintomaId } });
+    if (!sintoma) throw new NotFoundException('Sintoma não encontrado.');
+
+    // A urgência sobe se o atendimento ao público estiver afectado
+    let prioridade = sintoma.prioridadeSugerida;
+    const respostas = dto.respostas ?? {};
+    const afectaPublico = Object.values(respostas).some((r) =>
+      typeof r === 'string' && /sim, com fila|sim, muitos|a todos|também estão|também não conseguem|sim$/i.test(r.trim()),
+    );
+    if (afectaPublico && prioridade !== 'CRITICA') {
+      prioridade = prioridade === 'ALTA' ? 'CRITICA' : 'ALTA';
+    }
+
+    const linhas: string[] = [];
+    const perguntas = (sintoma.perguntas as any[]) ?? [];
+    for (const p of perguntas) {
+      if (respostas[p.chave]) linhas.push(`${p.pergunta} → ${respostas[p.chave]}`);
+    }
+    if (dto.observacoes?.trim()) linhas.push(`Observações do requerente: ${dto.observacoes.trim()}`);
+    if (sintoma.diagnosticoProvavel) linhas.push(`\n[Orientação técnica] ${sintoma.diagnosticoProvavel}`);
+
+    const ano = new Date().getFullYear();
+    const total = await this.prisma.pedido.count();
+    const numero = `INC-${ano}-${String(total + 132).padStart(5, '0')}`;
+
+    const p = await this.prisma.pedido.create({
+      data: {
+        numero, assunto: sintoma.rotulo, descricao: linhas.join('\n'),
+        categoria: sintoma.categoriaTecnica, prioridade, slaHoras: SLA_HORAS[prioridade],
+        autorId: user.id, activoId: dto.activoId || null,
+        sintomaId: sintoma.id, respostas: respostas as any,
+        eventos: { create: { descricao: `Pedido submetido por ${user.nome} através do assistente de sintomas`, autorId: user.id } },
+      },
+    });
+
+    await this.prisma.sintoma.update({ where: { id: sintoma.id }, data: { vezesUsado: { increment: 1 } } });
+    await this.auditoria.registar({ quemNome: user.nome, quemPerfil: user.perfil, accao: `Abriu o pedido #${numero}`, titularNome: user.nome });
+    await this.notificacoes.criarParaPerfis(
+      ['ADMIN', 'TECNICO'],
+      `Novo pedido #${numero} (${prioridade})`,
+      `${sintoma.rotulo} — ${user.nome}. SLA: ${SLA_HORAS[prioridade]}h.`,
+      '/pedidos',
+    );
+    return p;
+  }
+
+  /** Contagem por categoria, para os separadores da lista de pedidos */
+  async resumoPorCategoria(user: { id: string; perfil: string }) {
+    const filtro: any = user.perfil === 'FUNCIONARIO' ? { autorId: user.id } : {};
+    const grupos = await this.prisma.pedido.groupBy({
+      by: ['categoria'], where: filtro, _count: { _all: true },
+    });
+    const abertos = await this.prisma.pedido.groupBy({
+      by: ['categoria'],
+      where: { ...filtro, estado: { notIn: ['RESOLVIDO', 'FECHADO'] } },
+      _count: { _all: true },
+    });
+    return grupos.map((g) => ({
+      categoria: g.categoria,
+      total: g._count._all,
+      abertos: abertos.find((a) => a.categoria === g.categoria)?._count._all ?? 0,
+    }));
+  }
+
   /** Once-Only: autor, localizacao e SLA sao derivados pelo sistema */
   async criar(dto: { assunto: string; descricao?: string; categoria: string; prioridade: Prioridade; activoId?: string }, user: { id: string; nome: string; perfil: string }) {
     const ano = new Date().getFullYear();

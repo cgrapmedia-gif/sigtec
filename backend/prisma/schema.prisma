@@ -221,6 +221,27 @@ model EventoActivo {
   tipo      String   @default("intervencao")
 }
 
+/// Catálogo de sintomas em linguagem comum — configurável pelo Administrador.
+/// Permite que quem abre o pedido descreva o problema sem saber vocabulário técnico.
+model Sintoma {
+  id                 String     @id @default(cuid())
+  grupo              String
+  rotulo             String
+  icone              String?
+  descricaoAjuda     String?
+  perguntas          Json?
+  passosAutoAjuda    Json?
+  prioridadeSugerida Prioridade @default(MEDIA)
+  categoriaTecnica   String
+  diagnosticoProvavel String?
+  ordem              Int        @default(0)
+  activo             Boolean    @default(true)
+  vezesUsado         Int        @default(0)
+  criadoEm           DateTime   @default(now())
+
+  pedidos Pedido[]
+}
+
 model Pedido {
   id         String       @id @default(cuid())
   numero     String       @unique
@@ -236,6 +257,10 @@ model Pedido {
   tecnicoId  String?
   activo     Activo?      @relation(fields: [activoId], references: [id])
   activoId   String?
+  sintoma    Sintoma?     @relation(fields: [sintomaId], references: [id])
+  sintomaId  String?
+  respostas  Json?
+  resolvidoPorAutoAjuda Boolean @default(false)
   criadoEm   DateTime     @default(now())
   fechadoEm  DateTime?
   satisfacao Int?

@@ -1,5 +1,6 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { UserActual } from '../auth/user.decorator';
 import { DashboardService } from './dashboard.service';
 
 @UseGuards(JwtAuthGuard)
@@ -8,5 +9,5 @@ export class DashboardController {
   constructor(private svc: DashboardService) {}
 
   @Get()
-  resumo() { return this.svc.resumo(); }
+  resumo(@UserActual() user: any) { return this.svc.resumo(user); }
 }

@@ -27,11 +27,18 @@ export class PedidosController {
   @Get()
   listar(@UserActual() user: any) { return this.svc.listar(user); }
 
-  @Get(':id')
-  obter(@Param('id') id: string, @UserActual() user: any) { return this.svc.obter(id, user); }
-
   @Post()
   criar(@Body() dto: CriarPedidoDto, @UserActual() user: any) { return this.svc.criar(dto, user); }
+
+  /** Via principal de abertura: assistente de sintomas */
+  @Post('por-sintoma')
+  criarPorSintoma(@Body() dto: any, @UserActual() user: any) { return this.svc.criarPorSintoma(dto, user); }
+
+  @Get('resumo-categorias')
+  resumo(@UserActual() user: any) { return this.svc.resumoPorCategoria(user); }
+
+  @Get(':id')
+  obter(@Param('id') id: string, @UserActual() user: any) { return this.svc.obter(id, user); }
 
   @Patch(':id/estado') @Perfis('ADMIN', 'TECNICO')
   estado(@Param('id') id: string, @Body() dto: ActualizarEstadoDto, @UserActual() user: any) {

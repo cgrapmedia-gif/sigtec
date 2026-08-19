@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { api, getUser } from '@/lib/api';
+import AssistentePedido from '@/components/AssistentePedido';
 import { ESTADO_PEDIDO, PRIORIDADE, fmtData, fmtDataHora } from '@/lib/formato';
 
 const CATEGORIAS = ['Hardware', 'Software', 'Rede', 'Impressão', 'Aplicação', 'Sistema biométrico'];
@@ -14,12 +15,17 @@ export default function PedidosPage() {
   const [pesquisa, setPesquisa] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
   const [novo, setNovo] = useState(false);
+  const [assistente, setAssistente] = useState(false);
+  const [categoriaActiva, setCategoriaActiva] = useState('');
+  const [vista, setVista] = useState<'abertos' | 'todos'>('abertos');
   const [detalhe, setDetalhe] = useState<any>(null);
   const [aAvaliar, setAAvaliar] = useState<any>(null);
+  const [contagens, setContagens] = useState<any[]>([]);
   const [msg, setMsg] = useState('');
 
   const carregar = useCallback(() => {
     api('/pedidos').then(setPedidos).catch((e) => setMsg(e.message));
+    api('/pedidos/resumo-categorias').then(setContagens).catch(() => {});
     // Once-Only: o funcionário recebe os equipamentos que lhe estão atribuídos;
     // os perfis de gestão recebem o inventário completo.
     const origem = user?.perfil === 'FUNCIONARIO' ? '/activos/meus' : '/activos';
@@ -28,6 +34,8 @@ export default function PedidosPage() {
   useEffect(carregar, [carregar]);
 
   const lista = pedidos.filter((p) =>
+    (!categoriaActiva || p.categoria === categoriaActiva) &&
+    (vista === 'todos' || !['RESOLVIDO', 'FECHADO'].includes(p.estado)) &&
     (!filtroEstado || p.estado === filtroEstado) &&
     (p.assunto + p.numero + (p.autor?.nome ?? '')).toLowerCase().includes(pesquisa.toLowerCase()),
   );
@@ -40,7 +48,8 @@ export default function PedidosPage() {
     <div className="space-y-4">
       <div className="flex items-center gap-3 flex-wrap">
         <h1 className="text-xl font-bold flex-1">Pedidos Técnicos</h1>
-        <button className="btn-primario" onClick={() => setNovo(true)}>＋ Abrir pedido</button>
+        <button className="btn-primario" onClick={() => setAssistente(true)}>🛠 Preciso de ajuda</button>
+        {podeGerir && <button className="btn-contorno" onClick={() => setNovo(true)}>Registo manual</button>}
       </div>
 
       {user?.perfil === 'FUNCIONARIO' && (
@@ -48,8 +57,29 @@ export default function PedidosPage() {
       )}
       {msg && <p className="text-vermelho text-sm">{msg}</p>}
 
-      <div className="flex gap-2.5 flex-wrap">
-        <input className="campo-input flex-1 min-w-[180px]" type="search" placeholder="Pesquisar por assunto, número ou autor…" value={pesquisa} onChange={(e) => setPesquisa(e.target.value)} />
+      {/* Separadores por categoria — cada pessoa vê só o universo que lhe interessa */}
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <BotaoCategoria activa={categoriaActiva === ''} onClick={() => setCategoriaActiva('')}
+          rotulo="Todas" total={contagens.reduce((s: number, c: any) => s + c.total, 0)}
+          abertos={contagens.reduce((s: number, c: any) => s + c.abertos, 0)} />
+        {contagens.map((c: any) => (
+          <BotaoCategoria key={c.categoria} activa={categoriaActiva === c.categoria}
+            onClick={() => setCategoriaActiva(c.categoria)} rotulo={c.categoria} total={c.total} abertos={c.abertos} />
+        ))}
+      </div>
+
+      <div className="flex gap-2.5 flex-wrap items-center">
+        <div className="flex rounded-lg border border-linha overflow-hidden">
+          <button onClick={() => setVista('abertos')}
+            className={`px-3.5 py-2 text-[12.5px] font-semibold transition ${vista === 'abertos' ? 'bg-preto text-white' : 'bg-white'}`}>
+            Em curso
+          </button>
+          <button onClick={() => setVista('todos')}
+            className={`px-3.5 py-2 text-[12.5px] font-semibold transition ${vista === 'todos' ? 'bg-preto text-white' : 'bg-white'}`}>
+            Histórico
+          </button>
+        </div>
+        <input className="campo-input flex-1 min-w-[160px]" type="search" placeholder="Pesquisar…" value={pesquisa} onChange={(e) => setPesquisa(e.target.value)} />
         <select className="campo-input w-auto" value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
           <option value="">Todos os estados</option>
           {ESTADOS.map((e) => <option key={e} value={e}>{ESTADO_PEDIDO[e].rotulo}</option>)}
@@ -83,11 +113,18 @@ export default function PedidosPage() {
                 </td>
               </tr>
             ))}
-            {lista.length === 0 && <tr><td colSpan={5} className="td text-center text-cinza py-6">Sem pedidos para mostrar. Abra o primeiro pedido para começar o registo.</td></tr>}
+            {lista.length === 0 && (
+              <tr><td colSpan={5} className="td text-center text-cinza py-8">
+                {vista === 'abertos'
+                  ? 'Nenhum pedido em curso nesta categoria. Veja o histórico para os já resolvidos.'
+                  : 'Sem pedidos nesta categoria.'}
+              </td></tr>
+            )}
           </tbody>
         </table>
       </div>
 
+      {assistente && <AssistentePedido fechar={() => setAssistente(false)} feito={() => { setAssistente(false); carregar(); }} />}
       {novo && <NovoPedido activos={activos} user={user} fechar={() => setNovo(false)} feito={() => { setNovo(false); carregar(); }} />}
       {detalhe && <DetalhePedido pedido={detalhe} podeGerir={podeGerir} fechar={() => setDetalhe(null)} feito={() => { setDetalhe(null); carregar(); }} />}
       {aAvaliar && <ModalAvaliacao pedido={aAvaliar} fechar={() => setAAvaliar(null)} feito={() => { setAAvaliar(null); carregar(); }} />}
@@ -338,5 +375,21 @@ function ModalAvaliacao({ pedido, fechar, feito }: any) {
       <p className="text-[11.5px] text-cinza mt-2">A avaliação alimenta o painel público de indicadores do serviço.</p>
       {erro && <p className="text-vermelho text-sm mt-2">{erro}</p>}
     </Modal>
+  );
+}
+
+
+/** Separador de categoria com contagem de pedidos em curso */
+function BotaoCategoria({ activa, onClick, rotulo, total, abertos }: any) {
+  return (
+    <button onClick={onClick}
+      className={`shrink-0 px-3.5 py-2.5 rounded-xl border text-left transition min-h-[44px] ${
+        activa ? 'bg-preto text-white border-preto' : 'bg-white border-linha hover:border-dourado'
+      }`}>
+      <span className="block text-[12.5px] font-semibold whitespace-nowrap">{rotulo}</span>
+      <span className={`block text-[10.5px] ${activa ? 'text-douradoClaro' : 'text-cinza'}`}>
+        {abertos > 0 ? `${abertos} em curso` : `${total} no total`}
+      </span>
+    </button>
   );
 }

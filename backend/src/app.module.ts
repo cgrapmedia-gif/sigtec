@@ -18,6 +18,7 @@ import { ConhecimentoModule } from './conhecimento/conhecimento.module';
 import { CategoriasModule } from './categorias/categorias.module';
 import { FornecedoresModule } from './fornecedores/fornecedores.module';
 import { DepartamentosModule } from './departamentos/departamentos.module';
+import { SintomasModule } from './sintomas/sintomas.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { DepartamentosModule } from './departamentos/departamentos.module';
     CategoriasModule,
     FornecedoresModule,
     DepartamentosModule,
+    SintomasModule,
     DashboardModule,
     QuestionarioModule,
   ],
