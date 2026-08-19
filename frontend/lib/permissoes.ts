@@ -6,6 +6,11 @@ export function pode(permissao: string): boolean {
   return Array.isArray(u?.permissoes) ? u.permissoes.includes(permissao) : false;
 }
 
+/** Todas as permissões indicadas têm de estar presentes */
+export function podeTudo(...permissoes: string[]): boolean {
+  return permissoes.every(pode);
+}
+
 export const ROTULO_PERFIL: Record<string, string> = {
   FUNCIONARIO: 'Funcionário(a)',
   TECNICO: 'Técnico',

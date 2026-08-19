@@ -35,7 +35,7 @@ export default function CategoriasPage() {
       {msg && <p className="text-vermelho text-sm">{msg}</p>}
 
       <div className="cartao envolvente-tabela overflow-x-auto">
-        <table className="w-full tabela-adaptavel sm:min-w-[760px]">
+        <table className="w-full tabela-adaptavel md:min-w-[760px]">
           <thead>
             <tr>
               <th className="th">Categoria</th><th className="th">Tipo</th><th className="th">Ciclo de vida</th>

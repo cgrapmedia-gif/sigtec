@@ -149,6 +149,7 @@ model Departamento {
 
 model User {
   id             String        @id @default(cuid())
+  utilizador     String?       @unique
   email          String        @unique
   nome           String
   passwordHash   String
@@ -332,6 +333,24 @@ model ArtigoConhecimento {
   autorId       String
   criadoEm      DateTime @default(now())
   actualizadoEm DateTime @updatedAt
+}
+
+/// Conhecimento de resolução: padrões conhecidos por fabricante, categoria e sintoma.
+/// Alimenta as sugestões apresentadas ao técnico ao abrir um pedido.
+model Resolucao {
+  id             String   @id @default(cuid())
+  marca          String?
+  categoria      String?
+  sintomaChave   String
+  titulo         String
+  passos         Json
+  pecaProvavel   String?
+  tempoEstimado  Int?
+  fonte          String   @default("Fabricante")
+  vezesAplicada  Int      @default(0)
+  vezesResolvida Int      @default(0)
+  activo         Boolean  @default(true)
+  criadoEm       DateTime @default(now())
 }
 
 model LogAuditoria {

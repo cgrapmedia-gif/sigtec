@@ -34,7 +34,7 @@ body {
   font-size: 16px;                      /* < 16px faz o Safari do iOS ampliar ao focar */
   min-height: 44px;
 }
-@screen sm { .campo-input { @apply text-sm; } }
+@screen md { .campo-input { @apply text-sm; } }
 
 .th { @apply text-left text-[10.5px] uppercase tracking-wider text-cinza font-semibold px-2.5 py-2 border-b-2 border-linha; }
 .td { @apply px-2.5 py-2.5 border-b border-linha align-middle text-[13px]; }
@@ -42,7 +42,7 @@ body {
 /* ---------- Tabelas adaptáveis a telemóvel ----------
    Em ecrãs estreitos cada linha passa a cartão, com o nome da coluna
    à esquerda (vindo do atributo data-rotulo) e o valor à direita.        */
-@media (max-width: 700px) {
+@media (max-width: 767px) {
   .tabela-adaptavel { @apply min-w-0 w-full; }
   .tabela-adaptavel thead { @apply hidden; }
   .tabela-adaptavel tr {
@@ -70,10 +70,10 @@ body {
 
 /* ---------- Modais em ecrã inteiro no telemóvel ---------- */
 .modal-fundo {
-  @apply fixed inset-0 bg-preto/55 z-50 flex items-end sm:items-start justify-center overflow-y-auto;
+  @apply fixed inset-0 bg-preto/55 z-50 flex items-end md:items-start justify-center overflow-y-auto;
   padding: 0;
 }
-@screen sm { .modal-fundo { @apply p-4 pt-12; } }
+@screen md { .modal-fundo { @apply p-4 pt-12; } }
 .modal-caixa {
   @apply bg-white w-full shadow-2xl;
   border-radius: 18px 18px 0 0;
@@ -81,15 +81,22 @@ body {
   overflow-y: auto;
   padding-bottom: env(safe-area-inset-bottom);  /* barra inferior do iPhone */
 }
-@screen sm {
+@screen md {
   .modal-caixa { @apply rounded-2xl max-h-none; }
 }
 .modal-cabecalho {
-  @apply flex items-center px-4 sm:px-5 py-4 border-b border-linha sticky top-0 bg-white z-10;
+  @apply flex items-center px-4 md:px-5 py-4 border-b border-linha sticky top-0 bg-white z-10;
 }
-.modal-corpo { @apply p-4 sm:p-5; }
+.modal-corpo { @apply p-4 md:p-5; }
 .modal-rodape {
-  @apply px-4 sm:px-5 py-4 border-t border-linha flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 sticky bottom-0 bg-white;
+  @apply px-4 md:px-5 py-4 border-t border-linha flex flex-col-reverse md:flex-row md:justify-end gap-2.5 sticky bottom-0 bg-white;
+}
+
+/* Formulários em coluna única até aos 768px — dois campos lado a lado são
+   ilegíveis num telemóvel, mesmo cabendo tecnicamente. */
+@media (max-width: 767px) {
+  .modal-corpo .grid { grid-template-columns: 1fr !important; }
+  .modal-rodape .btn { width: 100%; }
 }
 
 /* ---------- Barra lateral: área segura em iOS ---------- */

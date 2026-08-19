@@ -19,6 +19,7 @@ import { CategoriasModule } from './categorias/categorias.module';
 import { FornecedoresModule } from './fornecedores/fornecedores.module';
 import { DepartamentosModule } from './departamentos/departamentos.module';
 import { SintomasModule } from './sintomas/sintomas.module';
+import { ResolucoesModule } from './resolucoes/resolucoes.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { SintomasModule } from './sintomas/sintomas.module';
     FornecedoresModule,
     DepartamentosModule,
     SintomasModule,
+    ResolucoesModule,
     DashboardModule,
     QuestionarioModule,
   ],

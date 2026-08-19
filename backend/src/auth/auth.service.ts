@@ -13,9 +13,11 @@ export class AuthService {
     private auditoria: AuditoriaService,
   ) {}
 
-  async login(email: string, password: string, ip?: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
+  /** Aceita o nome de utilizador (primeiro.ultimo) ou, por compatibilidade, o email completo */
+  async login(identificador: string, password: string, ip?: string) {
+    const id = identificador.toLowerCase().trim();
+    const user = await this.prisma.user.findFirst({
+      where: { OR: [{ utilizador: id }, { email: id }] },
       include: { departamento: true },
     });
     if (!user || !user.activo) throw new UnauthorizedException('Credenciais inválidas.');
@@ -49,6 +51,7 @@ export class AuthService {
     return {
       id: u.id,
       nome: u.nome,
+      utilizador: u.utilizador ?? u.email.split('@')[0],
       email: u.email,
       perfil: u.perfil,
       localizacao: u.localizacao,

@@ -58,7 +58,7 @@ export default function DepartamentosPage() {
       )}
 
       <div className="cartao envolvente-tabela overflow-x-auto">
-        <table className="w-full tabela-adaptavel sm:min-w-[520px]">
+        <table className="w-full tabela-adaptavel md:min-w-[520px]">
           <thead>
             <tr><th className="th">Departamento</th><th className="th">Utilizadores</th><th className="th">Itens</th>{podeGerir && <th className="th"></th>}</tr>
           </thead>

@@ -144,6 +144,28 @@ export class ActivosService {
     return a;
   }
 
+  /**
+   * Inserção em lote — para registar de uma vez um conjunto de equipamentos iguais
+   * (por exemplo, dez computadores idênticos recebidos na mesma remessa).
+   */
+  async criarLote(dto: { base: any; quantidade?: number; variacoes?: any[] }, quem: { nome: string; perfil: string }) {
+    const itens = dto.variacoes?.length
+      ? dto.variacoes.map((v) => ({ ...dto.base, ...v }))
+      : Array.from({ length: Math.min(Number(dto.quantidade ?? 1), 100) }, () => ({ ...dto.base }));
+    if (itens.length === 0) throw new BadRequestException('Nada a registar.');
+
+    const criados: any[] = [];
+    const erros: { linha: number; erro: string }[] = [];
+    for (let i = 0; i < itens.length; i++) {
+      try {
+        criados.push(await this.criar(itens[i], quem));
+      } catch (e: any) {
+        erros.push({ linha: i + 1, erro: e?.message ?? 'Erro desconhecido' });
+      }
+    }
+    return { criados: criados.length, itens: criados, erros };
+  }
+
   async actualizar(id: string, dto: any, quem: { nome: string; perfil: string }) {
     const antes = await this.prisma.activo.findUnique({ where: { id }, include: { responsavel: { select: { nome: true } } } });
     if (!antes) throw new NotFoundException('Item não encontrado.');

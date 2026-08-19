@@ -59,7 +59,7 @@ export default function FornecedoresPage() {
 
       <section className="cartao envolvente-tabela overflow-x-auto">
         <h2 className="text-[15px] font-bold mb-3">Contratos e subscrições</h2>
-        <table className="w-full tabela-adaptavel sm:min-w-[760px]">
+        <table className="w-full tabela-adaptavel md:min-w-[760px]">
           <thead>
             <tr>
               <th className="th">N.º</th><th className="th">Designação</th><th className="th">Fornecedor</th>
@@ -92,7 +92,7 @@ export default function FornecedoresPage() {
 
       <section className="cartao envolvente-tabela overflow-x-auto">
         <h2 className="text-[15px] font-bold mb-3">Fornecedores</h2>
-        <table className="w-full tabela-adaptavel sm:min-w-[680px]">
+        <table className="w-full tabela-adaptavel md:min-w-[680px]">
           <thead>
             <tr><th className="th">Fornecedor</th><th className="th">Contacto</th><th className="th">Apoio técnico</th><th className="th">Contratos</th><th className="th">Itens</th>{podeGerir && <th className="th"></th>}</tr>
           </thead>

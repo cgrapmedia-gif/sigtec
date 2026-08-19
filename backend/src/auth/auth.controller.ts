@@ -1,12 +1,12 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsString, MinLength } from 'class-validator';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { UserActual } from './user.decorator';
 import { DESCRICOES, GRUPOS, PERMISSOES, permissoesDe } from '../comum/permissoes';
 
 class LoginDto {
-  @IsEmail() email!: string;
+  @IsString() @MinLength(3) utilizador!: string;
   @IsString() @MinLength(6) password!: string;
 }
 
@@ -16,7 +16,7 @@ export class AuthController {
 
   @Post('login')
   login(@Body() dto: LoginDto, @Req() req: any) {
-    return this.auth.login(dto.email, dto.password, req.ip);
+    return this.auth.login(dto.utilizador, dto.password, req.ip);
   }
 
   @UseGuards(JwtAuthGuard)

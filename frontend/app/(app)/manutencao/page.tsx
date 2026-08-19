@@ -1,12 +1,14 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import SeletorComCriar from '@/components/SeletorComCriar';
 import { diasAte, fmtData } from '@/lib/formato';
 
 export default function ManutencaoPage() {
   const [ordens, setOrdens] = useState<any[]>([]);
   const [activos, setActivos] = useState<any[]>([]);
-  const [nova, setNova] = useState(false);
+  const [nova, setNova] = useState<any>(null);
+  const [filtroCat, setFiltroCat] = useState('');
   const [msg, setMsg] = useState('');
   const carregar = useCallback(() => {
     api('/manutencao').then(setOrdens).catch((e) => setMsg(e.message));
@@ -33,8 +35,8 @@ export default function ManutencaoPage() {
     <div className="space-y-4">
       <div className="flex items-center gap-3 flex-wrap">
         <h1 className="text-xl font-bold flex-1">Manutenção Preventiva</h1>
-        <button className="btn-contorno" onClick={gerarRotinas}>⟳ Gerar rotinas do parque</button>
-        <button className="btn-primario" onClick={() => setNova(true)}>＋ Nova ordem</button>
+        <button className="btn-contorno" onClick={gerarRotinas}>🧭 Gerar rotinas do parque</button>
+        <button className="btn-primario" onClick={() => setNova({ assistido: true })}>＋ Nova ordem</button>
       </div>
       {msg && <p className="text-vermelho text-sm">{msg}</p>}
       {urgentes > 0 && (
@@ -42,8 +44,16 @@ export default function ManutencaoPage() {
           ⏰ <b className="text-dourado">Alerta automático:</b> {urgentes} equipamento(s) necessitam de manutenção dentro de 15 dias.
         </p>
       )}
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0">
+        <BotaoCat activa={filtroCat === ''} onClick={() => setFiltroCat('')} rotulo="Todas" total={ordens.length} />
+        {Array.from(new Set(ordens.map((o) => o.categoria))).map((c) => (
+          <BotaoCat key={c} activa={filtroCat === c} onClick={() => setFiltroCat(c)} rotulo={c}
+            total={ordens.filter((o) => o.categoria === c).length} />
+        ))}
+      </div>
+
       <div className="cartao divide-y divide-linha">
-        {ordens.map((o) => {
+        {ordens.filter((o) => !filtroCat || o.categoria === filtroCat).map((o) => {
           const d = diasAte(o.dataPrevista);
           return (
             <div key={o.id} className="flex items-center gap-3.5 py-3.5">
@@ -65,12 +75,21 @@ export default function ManutencaoPage() {
         {ordens.length === 0 && <p className="py-4 text-sm text-cinza">Todas as manutenções foram concluídas. Use «Gerar rotinas do parque» para criar o calendário preventivo automaticamente.</p>}
       </div>
 
-      {nova && <NovaOrdem activos={activos} fechar={() => setNova(false)} feito={() => { setNova(false); carregar(); }} />}
+      {nova && <NovaOrdem activos={activos} assistido={nova.assistido} fechar={() => setNova(null)} feito={() => { setNova(null); carregar(); }} />}
     </div>
   );
 }
 
-function NovaOrdem({ activos, fechar, feito }: any) {
+function NovaOrdem({ activos, assistido, fechar, feito }: any) {
+  const [modo, setModo] = useState<'assistido' | 'completo'>(assistido ? 'assistido' : 'completo');
+  const MODELOS = [
+    { tarefa: 'Limpeza interna, actualizações e verificação de antivírus', categoria: 'Computador', meses: 3 },
+    { tarefa: 'Manutenção preventiva e reposição de consumíveis', categoria: 'Impressora', meses: 3 },
+    { tarefa: 'Backup completo e teste de restauro', categoria: 'Servidor', meses: 1 },
+    { tarefa: 'Teste de autonomia e verificação de baterias', categoria: 'UPS', meses: 6 },
+    { tarefa: 'Calibração e limpeza do sensor', categoria: 'Leitor biométrico', meses: 6 },
+    { tarefa: 'Limpeza de filtros e verificação de gás', categoria: 'Outro', meses: 6 },
+  ];
   const [tarefa, setTarefa] = useState('');
   const [categoria, setCategoria] = useState('Computador');
   const [dataPrevista, setDataPrevista] = useState(new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10));
@@ -95,10 +114,40 @@ function NovaOrdem({ activos, fechar, feito }: any) {
     <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
       <div className="modal-caixa sm:max-w-xl">
         <div className="modal-cabecalho">
-          <h3 className="font-bold flex-1">Nova ordem de manutenção</h3>
+          <div className="flex-1">
+            <h3 className="font-bold">Nova ordem de manutenção</h3>
+            <div className="flex gap-1.5 mt-1.5">
+              <button type="button" onClick={() => setModo('assistido')}
+                className={`px-2.5 py-1 rounded-lg text-[11.5px] font-semibold ${modo === 'assistido' ? 'bg-preto text-white' : 'bg-papel text-cinza'}`}>
+                🧭 Com ajuda
+              </button>
+              <button type="button" onClick={() => setModo('completo')}
+                className={`px-2.5 py-1 rounded-lg text-[11.5px] font-semibold ${modo === 'completo' ? 'bg-preto text-white' : 'bg-papel text-cinza'}`}>
+                ⚙ Preenchimento completo
+              </button>
+            </div>
+          </div>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>
         </div>
         <div className="modal-corpo space-y-3.5">
+          {modo === 'assistido' && (
+            <div>
+              <p className="text-[12.5px] bg-gradient-to-br from-[#FDF9EE] to-[#F7EFD8] border border-douradoClaro rounded-xl p-3 mb-3">
+                🧭 Escolha uma tarefa habitual e o sistema preenche categoria e periodicidade recomendadas.
+              </p>
+              <div className="space-y-2">
+                {MODELOS.map((m) => (
+                  <button key={m.tarefa} type="button"
+                    onClick={() => { setTarefa(m.tarefa); setCategoria(m.categoria); setRecorrenciaMeses(String(m.meses)); setModo('completo'); }}
+                    className="w-full text-left border border-linha rounded-xl p-3 hover:border-dourado transition min-h-[52px]">
+                    <b className="block text-[13.5px]">{m.tarefa}</b>
+                    <span className="text-[11.5px] text-cinza">{m.categoria} · a cada {m.meses} mês(es)</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {modo === 'completo' && <>
           <div>
             <label className="campo-rotulo">Tarefa</label>
             <input className="campo-input" value={tarefa} onChange={(e) => setTarefa(e.target.value)} placeholder="Ex.: Substituição de baterias da UPS" />
@@ -135,13 +184,27 @@ function NovaOrdem({ activos, fechar, feito }: any) {
             </select>
             <p className="text-[11px] text-dourado mt-1">✓ Ao concluir, a próxima ocorrência é agendada sozinha</p>
           </div>
+          </>}
           {erro && <p className="text-vermelho text-sm">{erro}</p>}
         </div>
         <div className="modal-rodape">
           <button className="btn-contorno" onClick={fechar}>Cancelar</button>
-          <button className="btn-primario" onClick={criar} disabled={aGuardar}>{aGuardar ? 'A criar…' : 'Criar ordem'}</button>
+          {modo === 'completo' && <button className="btn-primario" onClick={criar} disabled={aGuardar}>{aGuardar ? 'A criar…' : 'Criar ordem'}</button>}
         </div>
       </div>
     </div>
+  );
+}
+
+
+function BotaoCat({ activa, onClick, rotulo, total }: any) {
+  return (
+    <button onClick={onClick}
+      className={`shrink-0 px-3.5 py-2.5 rounded-xl border text-left transition min-h-[44px] ${
+        activa ? 'bg-preto text-white border-preto' : 'bg-white border-linha hover:border-dourado'
+      }`}>
+      <span className="block text-[12.5px] font-semibold whitespace-nowrap">{rotulo}</span>
+      <span className={`block text-[10.5px] ${activa ? 'text-douradoClaro' : 'text-cinza'}`}>{total} ordem(ns)</span>
+    </button>
   );
 }

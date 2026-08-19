@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, getUser } from '@/lib/api';
 import AssistentePedido from '@/components/AssistentePedido';
+import SugestoesResolucao from '@/components/SugestoesResolucao';
 import { ESTADO_PEDIDO, PRIORIDADE, fmtData, fmtDataHora } from '@/lib/formato';
 
 const CATEGORIAS = ['Hardware', 'Software', 'Rede', 'Impressão', 'Aplicação', 'Sistema biométrico'];
@@ -87,7 +88,7 @@ export default function PedidosPage() {
       </div>
 
       <div className="cartao envolvente-tabela overflow-x-auto">
-        <table className="w-full tabela-adaptavel sm:min-w-[640px]">
+        <table className="w-full tabela-adaptavel md:min-w-[640px]">
           <thead><tr><th className="th">N.º</th><th className="th">Assunto</th><th className="th">Prioridade / SLA</th><th className="th">Estado</th><th className="th">Data</th></tr></thead>
           <tbody>
             {lista.map((p) => (
@@ -262,6 +263,8 @@ function DetalhePedido({ pedido, podeGerir, fechar, feito }: any) {
         {pedido.activo && <Info rotulo="Equipamento" valor={pedido.activo.numInventario} mono />}
       </div>
       {pedido.descricao && <p className="text-[13px] mb-4 bg-papel rounded-lg p-3">{pedido.descricao}</p>}
+
+      {podeGerir && <SugestoesResolucao pedidoId={pedido.id} />}
 
       {podeGerir && (
         <div className="space-y-3 mb-4 border border-linha rounded-xl p-3.5">

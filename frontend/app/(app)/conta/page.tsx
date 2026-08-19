@@ -53,7 +53,7 @@ export default function ContaPage() {
         <h2 className="text-[15px] font-bold">Dados da conta</h2>
         <div className="grid sm:grid-cols-2 gap-3 text-[13px]">
           <div><p className="text-[10.5px] uppercase tracking-wide text-cinza font-semibold">Nome</p><p className="font-medium">{user.nome}</p></div>
-          <div><p className="text-[10.5px] uppercase tracking-wide text-cinza font-semibold">Email institucional</p><p className="font-medium">{user.email}</p></div>
+          <div><p className="text-[10.5px] uppercase tracking-wide text-cinza font-semibold">Utilizador</p><p className="font-medium font-mono">{user.utilizador ?? user.email?.split('@')[0]}</p></div>
           <div><p className="text-[10.5px] uppercase tracking-wide text-cinza font-semibold">Perfil</p><p className="font-medium">{user.perfil}</p></div>
           <div><p className="text-[10.5px] uppercase tracking-wide text-cinza font-semibold">Departamento</p><p className="font-medium">{user.departamento ?? '—'}</p></div>
         </div>

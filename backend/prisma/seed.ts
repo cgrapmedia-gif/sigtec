@@ -6,6 +6,7 @@
 import { PrismaClient, Perfil, EstadoActivo, EstadoPedido, Prioridade, EstadoProposta } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { SINTOMAS } from './sintomas';
+import { RESOLUCOES } from './resolucoes';
 
 const prisma = new PrismaClient();
 
@@ -20,12 +21,15 @@ async function main() {
   }
 
   // Utilizadores
-  const mk = (email: string, nome: string, perfil: Perfil, dep: string, loc?: string) =>
-    prisma.user.upsert({
+  // O utilizador é o nome no formato primeiro.ultimo — é com ele que se inicia sessão
+  const mk = (email: string, nome: string, perfil: Perfil, dep: string, loc?: string) => {
+    const utilizador = email.split('@')[0];
+    return prisma.user.upsert({
       where: { email },
-      update: {},
-      create: { email, nome, perfil, passwordHash: hash, departamentoId: deps[dep], localizacao: loc },
+      update: { utilizador },
+      create: { email, utilizador, nome, perfil, passwordHash: hash, departamentoId: deps[dep], localizacao: loc },
     });
+  };
 
   const admin = await mk('carlos.miranda@consuladoporto.gov.ao', 'Carlos Miranda', Perfil.ADMIN, 'Informática');
   const tecnico = await mk('rui.sousa@consuladoporto.gov.ao', 'Rui Sousa', Perfil.TECNICO, 'Informática');
@@ -303,11 +307,25 @@ async function main() {
     console.log(`  ${SINTOMAS.length} sintomas catalogados.`);
   }
 
+  // Conhecimento de resolução por fabricante
+  if ((await prisma.resolucao.count()) === 0) {
+    for (const r of RESOLUCOES) {
+      await prisma.resolucao.create({
+        data: {
+          marca: r.marca ?? null, categoria: r.categoria ?? null, sintomaChave: r.sintomaChave,
+          titulo: r.titulo, passos: r.passos as any, pecaProvavel: r.pecaProvavel ?? null,
+          tempoEstimado: r.tempoEstimado ?? null, fonte: r.fonte,
+        },
+      });
+    }
+    console.log(`  ${RESOLUCOES.length} procedimentos de resolução carregados.`);
+  }
+
   console.log('Seed concluído. Contas (password: sigtec2026):');
-  console.log('  Admin:       carlos.miranda@consuladoporto.gov.ao');
-  console.log('  Técnico:     rui.sousa@consuladoporto.gov.ao');
-  console.log('  Funcionária: luisa.baptista@consuladoporto.gov.ao');
-  console.log('  Direcção:    ana.vandunem@consuladoporto.gov.ao');
+  console.log('  Admin:       carlos.miranda');
+  console.log('  Técnico:     rui.sousa');
+  console.log('  Funcionária: luisa.baptista');
+  console.log('  Direcção:    ana.vandunem');
 }
 
 main().catch((e) => { console.error(e); process.exit(1); }).finally(() => prisma.$disconnect());

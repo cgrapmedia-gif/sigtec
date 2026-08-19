@@ -3,6 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { api, getUser } from '@/lib/api';
 import { pode } from '@/lib/permissoes';
+import SeletorComCriar from '@/components/SeletorComCriar';
+import RegistoEmLote from '@/components/RegistoEmLote';
 import { ESTADO_ACTIVO, fmtData } from '@/lib/formato';
 
 const TIPOS: Record<string, string> = {
@@ -27,6 +29,7 @@ export default function ActivosPage() {
   const [utilizadores, setUtilizadores] = useState<any[]>([]);
   const [filtroTipo, setFiltroTipo] = useState('');
   const [impacto, setImpacto] = useState<any>(null);
+  const [lote, setLote] = useState(false);
   const [pesquisa, setPesquisa] = useState('');
   const [filtroCat, setFiltroCat] = useState('');
   const [filtroEst, setFiltroEst] = useState('');
@@ -59,18 +62,30 @@ export default function ActivosPage() {
       <div className="flex items-center gap-3 flex-wrap">
         <h1 className="text-xl font-bold flex-1">Itens de Configuração</h1>
         <button className="btn-contorno" onClick={() => setEtiquetas(lista)}>🏷 Etiquetas QR ({lista.length})</button>
-        {podeGerir && <button className="btn-primario" onClick={() => setEditar({})}>＋ Registar activo</button>}
+        {podeGerir && (
+          <>
+            <button className="btn-contorno" onClick={() => setLote(true)}>⧉ Registar vários</button>
+            <button className="btn-primario" onClick={() => setEditar({ assistido: true })}>＋ Registar item</button>
+          </>
+        )}
       </div>
       {erro && <p className="text-vermelho text-sm">{erro}</p>}
+
+      {/* Separadores por categoria — a mesma lógica dos pedidos, em todo o sistema */}
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0">
+        <BotaoFiltro activa={filtroCat === ''} onClick={() => setFiltroCat('')} rotulo="Todas" total={activos.length} />
+        {cats.map((c) => (
+          <BotaoFiltro key={c} activa={filtroCat === c} onClick={() => setFiltroCat(c)} rotulo={c}
+            icone={activos.find((a) => a.categoria === c)?.categoriaRef?.icone}
+            total={activos.filter((a) => a.categoria === c).length} />
+        ))}
+      </div>
 
       <div className="flex gap-2.5 flex-wrap">
         <input className="campo-input flex-1 min-w-[180px]" type="search" placeholder="Pesquisar por código, marca, modelo, série ou localização…" value={pesquisa} onChange={(e) => setPesquisa(e.target.value)} />
         <select className="campo-input w-auto" value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
           <option value="">Todos os tipos</option>
           {Object.entries(TIPOS).map(([v, r]) => <option key={v} value={v}>{r}</option>)}
-        </select>
-        <select className="campo-input w-auto" value={filtroCat} onChange={(e) => setFiltroCat(e.target.value)}>
-          <option value="">Todas as categorias</option>{cats.map((c) => <option key={c}>{c}</option>)}
         </select>
         <select className="campo-input w-auto" value={filtroEst} onChange={(e) => setFiltroEst(e.target.value)}>
           <option value="">Todos os estados</option>
@@ -79,7 +94,7 @@ export default function ActivosPage() {
       </div>
 
       <div className="cartao envolvente-tabela overflow-x-auto">
-        <table className="w-full tabela-adaptavel sm:min-w-[720px]">
+        <table className="w-full tabela-adaptavel md:min-w-[720px]">
           <thead>
             <tr>
               <th className="th">Inventário</th><th className="th">Equipamento</th><th className="th">Localização</th>
@@ -132,11 +147,17 @@ export default function ActivosPage() {
           contratos={contratos}
           todosItens={activos}
           utilizadores={utilizadores}
+          recarregarListas={carregar}
           fechar={() => setEditar(null)}
           feito={() => { setEditar(null); carregar(); }}
         />
       )}
       {etiquetas && <Etiquetas activos={etiquetas} fechar={() => setEtiquetas(null)} />}
+      {lote && (
+        <RegistoEmLote categorias={categorias} departamentos={departamentos} fornecedores={fornecedores}
+          contratos={contratos} recarregar={carregar} fechar={() => setLote(false)}
+          feito={() => { setLote(false); carregar(); }} />
+      )}
     </div>
   );
 }
@@ -345,7 +366,7 @@ function FichaActivo({ activo, fechar, recarregar, todosItens }: any) {
 }
 
 /* ---------- Registo / edição ---------- */
-function FormActivo({ activo, departamentos, categorias, fornecedores, contratos, todosItens, utilizadores, fechar, feito }: any) {
+function FormActivo({ activo, departamentos, categorias, fornecedores, contratos, todosItens, utilizadores, recarregarListas, fechar, feito }: any) {
   const novo = !activo.id;
   const [f, setF] = useState<any>({
     numInventario: activo.numInventario ?? '',
@@ -374,6 +395,8 @@ function FormActivo({ activo, departamentos, categorias, fornecedores, contratos
   const esquema: any[] = Array.isArray(catSeleccionada?.esquemaCampos) ? catSeleccionada.esquemaCampos : [];
   const [erro, setErro] = useState('');
   const [aGuardar, setAGuardar] = useState(false);
+  // Modo assistido: só o essencial, com explicações. Modo completo: todos os campos.
+  const [modo, setModo] = useState<'assistido' | 'completo'>(novo && activo.assistido ? 'assistido' : 'completo');
   const set = (campo: string, valor: any) => setF((s: any) => ({ ...s, [campo]: valor }));
 
   async function guardar() {
@@ -393,7 +416,21 @@ function FormActivo({ activo, departamentos, categorias, fornecedores, contratos
     <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
       <div className="modal-caixa sm:max-w-2xl">
         <div className="modal-cabecalho">
-          <h3 className="font-bold flex-1">{novo ? 'Registar novo activo' : `Editar ${activo.numInventario}`}</h3>
+          <div className="flex-1">
+            <h3 className="font-bold">{novo ? 'Registar item de configuração' : `Editar ${activo.numInventario}`}</h3>
+            {novo && (
+              <div className="flex gap-1.5 mt-1.5">
+                <button type="button" onClick={() => setModo('assistido')}
+                  className={`px-2.5 py-1 rounded-lg text-[11.5px] font-semibold ${modo === 'assistido' ? 'bg-preto text-white' : 'bg-papel text-cinza'}`}>
+                  🧭 Com ajuda
+                </button>
+                <button type="button" onClick={() => setModo('completo')}
+                  className={`px-2.5 py-1 rounded-lg text-[11.5px] font-semibold ${modo === 'completo' ? 'bg-preto text-white' : 'bg-papel text-cinza'}`}>
+                  ⚙ Preenchimento completo
+                </button>
+              </div>
+            )}
+          </div>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>
         </div>
         <div className="p-5 space-y-3.5">
@@ -411,15 +448,16 @@ function FormActivo({ activo, departamentos, categorias, fornecedores, contratos
                 {Object.entries(TIPOS).map(([v, r]) => <option key={v} value={v}>{r}</option>)}
               </select>
             </div>
-            <div>
-              <label className="campo-rotulo">Categoria</label>
-              <select className="campo-input" value={f.categoriaId} onChange={(e) => set('categoriaId', e.target.value)}>
-                <option value="">— Seleccionar —</option>
-                {categorias.filter((c: any) => c.tipo === f.tipo).map((c: any) => (
-                  <option key={c.id} value={c.id}>{c.icone} {c.nome}</option>
-                ))}
-              </select>
-            </div>
+            <SeletorComCriar rotulo="Categoria" valor={f.categoriaId} aoMudar={(v) => set('categoriaId', v)}
+              opcoes={categorias.filter((c: any) => c.tipo === f.tipo).map((c: any) => ({ id: c.id, nome: `${c.icone ?? ''} ${c.nome}`.trim() }))}
+              endpoint="/categorias" aoCriar={recarregarListas}
+              ajuda="Define o ciclo de vida e os critérios de obsolescência do item"
+              campos={[
+                { chave: 'nome', rotulo: 'Nome da categoria', obrigatorio: true },
+                { chave: 'tipo', rotulo: 'Tipo', tipo: 'seleccao', opcoes: Object.keys(TIPOS), valorInicial: f.tipo },
+                { chave: 'cicloVidaMeses', rotulo: 'Ciclo de vida (meses)', tipo: 'numero', valorInicial: '60' },
+                { chave: 'icone', rotulo: 'Ícone', valorInicial: '🔧' },
+              ]} />
             <div className="sm:col-span-2">
               <label className="campo-rotulo">Designação {f.tipo === 'EQUIPAMENTO' && '(opcional)'}</label>
               <input className="campo-input" value={f.designacao} onChange={(e) => set('designacao', e.target.value)}
@@ -457,13 +495,10 @@ function FormActivo({ activo, departamentos, categorias, fornecedores, contratos
               <label className="campo-rotulo">Fim de garantia</label>
               <input className="campo-input" type="date" value={f.fimGarantia} onChange={(e) => set('fimGarantia', e.target.value)} />
             </div>
-            <div>
-              <label className="campo-rotulo">Departamento</label>
-              <select className="campo-input" value={f.departamentoId} onChange={(e) => set('departamentoId', e.target.value)}>
-                <option value="">— Não atribuído —</option>
-                {departamentos.map((d: any) => <option key={d.id} value={d.id}>{d.nome}</option>)}
-              </select>
-            </div>
+            <SeletorComCriar rotulo="Departamento" valor={f.departamentoId} aoMudar={(v) => set('departamentoId', v)}
+              opcoes={departamentos.map((d: any) => ({ id: d.id, nome: d.nome }))}
+              endpoint="/departamentos" aoCriar={recarregarListas} textoVazio="— Não atribuído —"
+              campos={[{ chave: 'nome', rotulo: 'Nome do departamento', obrigatorio: true }]} />
             <div>
               <label className="campo-rotulo">Responsável</label>
               <select className="campo-input" value={f.responsavelId} onChange={(e) => set('responsavelId', e.target.value)}>
@@ -474,21 +509,27 @@ function FormActivo({ activo, departamentos, categorias, fornecedores, contratos
               </select>
               <p className="text-[11px] text-dourado mt-1">✓ Once-Only: o item passa a aparecer nos pedidos deste utilizador</p>
             </div>
-            <div>
-              <label className="campo-rotulo">Fornecedor</label>
-              <select className="campo-input" value={f.fornecedorId} onChange={(e) => set('fornecedorId', e.target.value)}>
-                <option value="">— Nenhum —</option>
-                {fornecedores.map((x: any) => <option key={x.id} value={x.id}>{x.nome}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="campo-rotulo">Contrato associado</label>
-              <select className="campo-input" value={f.contratoId} onChange={(e) => set('contratoId', e.target.value)}>
-                <option value="">— Nenhum —</option>
-                {contratos.map((x: any) => <option key={x.id} value={x.id}>{x.numero} — {x.designacao}</option>)}
-              </select>
-            </div>
-            <div>
+            {modo === 'completo' && (
+              <SeletorComCriar rotulo="Fornecedor" valor={f.fornecedorId} aoMudar={(v) => set('fornecedorId', v)}
+                opcoes={fornecedores.map((x: any) => ({ id: x.id, nome: x.nome }))}
+                endpoint="/fornecedores" aoCriar={recarregarListas} textoVazio="— Nenhum —"
+                ajuda="Aparece na ficha como «quem contactar» em caso de avaria"
+                campos={[
+                  { chave: 'nome', rotulo: 'Nome do fornecedor', obrigatorio: true },
+                  { chave: 'telefone', rotulo: 'Telefone' },
+                  { chave: 'apoioTecnico', rotulo: 'Linha de apoio técnico' },
+                ]} />
+            )}
+            {modo === 'completo' && (
+              <div>
+                <label className="campo-rotulo">Contrato associado</label>
+                <select className="campo-input" value={f.contratoId} onChange={(e) => set('contratoId', e.target.value)}>
+                  <option value="">— Nenhum —</option>
+                  {contratos.map((x: any) => <option key={x.id} value={x.id}>{x.numero} — {x.designacao}</option>)}
+                </select>
+              </div>
+            )}
+            {modo === 'completo' && <div>
               <label className="campo-rotulo">Criticidade (1 a 5)</label>
               <select className="campo-input" value={f.criticidade} onChange={(e) => set('criticidade', e.target.value)}>
                 <option value="1">1 — Sem impacto no serviço</option>
@@ -497,11 +538,11 @@ function FormActivo({ activo, departamentos, categorias, fornecedores, contratos
                 <option value="4">4 — Afecta o atendimento</option>
                 <option value="5">5 — Serviço parado</option>
               </select>
-            </div>
-            <div>
+            </div>}
+            {modo === 'completo' && <div>
               <label className="campo-rotulo">Custo de reparação (€)</label>
               <input className="campo-input" type="number" min={0} step="0.01" value={f.custoReparacao} onChange={(e) => set('custoReparacao', e.target.value)} placeholder="Se aplicável" />
-            </div>
+            </div>}
             <div>
               <label className="campo-rotulo">Valor de substituição (€)</label>
               <input className="campo-input" type="number" min={0} step="0.01" value={f.valorSubstituicao} onChange={(e) => set('valorSubstituicao', e.target.value)} placeholder="Se aplicável" />
@@ -660,5 +701,19 @@ function ModalImpacto({ dados, fechar }: any) {
         </div>
       </div>
     </div>
+  );
+}
+
+
+/** Separador de filtro — usado no inventário e na manutenção, para uniformidade */
+function BotaoFiltro({ activa, onClick, rotulo, total, icone }: any) {
+  return (
+    <button onClick={onClick}
+      className={`shrink-0 px-3.5 py-2.5 rounded-xl border text-left transition min-h-[44px] ${
+        activa ? 'bg-preto text-white border-preto' : 'bg-white border-linha hover:border-dourado'
+      }`}>
+      <span className="block text-[12.5px] font-semibold whitespace-nowrap">{icone ? `${icone} ` : ''}{rotulo}</span>
+      <span className={`block text-[10.5px] ${activa ? 'text-douradoClaro' : 'text-cinza'}`}>{total} item(ns)</span>
+    </button>
   );
 }

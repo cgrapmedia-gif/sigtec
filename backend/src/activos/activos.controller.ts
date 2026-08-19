@@ -28,6 +28,9 @@ export class ActivosController {
   @Post() @Perfis('ADMIN', 'TECNICO')
   criar(@Body() dto: any, @UserActual() user: any) { return this.svc.criar(dto, user); }
 
+  @Post('lote') @Perfis('ADMIN', 'TECNICO')
+  criarLote(@Body() dto: any, @UserActual() user: any) { return this.svc.criarLote(dto, user); }
+
   @Patch(':id') @Perfis('ADMIN', 'TECNICO')
   actualizar(@Param('id') id: string, @Body() dto: any, @UserActual() user: any) {
     return this.svc.actualizar(id, dto, user);

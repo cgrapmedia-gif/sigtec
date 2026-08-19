@@ -56,7 +56,7 @@ export default function UtilizadoresPage() {
       {msg && <p className="text-vermelho text-sm">{msg}</p>}
 
       <div className="cartao envolvente-tabela overflow-x-auto">
-        <table className="w-full tabela-adaptavel sm:min-w-[680px]">
+        <table className="w-full tabela-adaptavel md:min-w-[680px]">
           <thead>
             <tr>
               <th className="th">Nome</th><th className="th">Email institucional</th><th className="th">Perfil</th>
@@ -70,7 +70,7 @@ export default function UtilizadoresPage() {
                   <span className="font-medium">{u.nome}</span>
                   <span className="block text-[11px] text-cinza">Desde {fmtData(u.criadoEm)}</span>
                 </td>
-                <td data-rotulo="Utilizador" className="td text-[12.5px] break-all">{u.email}</td>
+                <td data-rotulo="Utilizador" className="td text-[12.5px] font-mono break-all">{u.utilizador ?? u.email.split('@')[0]}</td>
                 <td data-rotulo="Perfil" className="td"><span className={`pill ${rotuloPerfil(u.perfil).classe}`}>{rotuloPerfil(u.perfil).rotulo}</span></td>
                 <td data-rotulo="Departamento" className="td text-[12.5px]">{u.departamento?.nome ?? '—'}</td>
                 <td data-rotulo="Estado" className="td">
@@ -155,7 +155,7 @@ function NovaConta({ departamentos, fechar, feito }: any) {
         method: 'POST',
         body: JSON.stringify({ nome, email, perfil, departamentoId: departamentoId || undefined, localizacao: localizacao || undefined }),
       });
-      feito({ nome: r.user.nome, email: r.user.email, password: r.passwordTemporaria });
+      feito({ nome: r.user.nome, email: r.user.email, utilizador: r.user.utilizador, password: r.passwordTemporaria });
     } catch (e: any) {
       setErro(e.message);
     } finally {
@@ -176,12 +176,12 @@ function NovaConta({ departamentos, fechar, feito }: any) {
           <input className="campo-input" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Maria Fernandes" />
         </div>
         <div>
-          <label className="campo-rotulo">Utilizador institucional</label>
-          <input className="campo-input" type="email" value={email}
-            onChange={(e) => { setEmail(e.target.value); setEmailManual(true); }}
-            placeholder="primeiro.ultimo@consuladoporto.gov.ao" />
+          <label className="campo-rotulo">Utilizador (gerado do nome)</label>
+          <input className="campo-input font-mono" type="text" value={email.split('@')[0]}
+            onChange={(e) => { setEmail(`${e.target.value}@consuladoporto.gov.ao`); setEmailManual(true); }}
+            placeholder="primeiro.ultimo" />
           {!emailManual && email && (
-            <p className="text-[11px] text-dourado mt-1">✓ Gerado do nome no formato institucional primeiro.ultimo</p>
+            <p className="text-[11px] text-dourado mt-1">✓ Gerado do nome. É com este utilizador que a pessoa inicia sessão.</p>
           )}
         </div>
         <div className="grid sm:grid-cols-2 gap-3.5">
@@ -249,7 +249,7 @@ function EditarConta({ conta, departamentos, fechar, feito }: any) {
         </div>
         <div>
           <label className="campo-rotulo">Utilizador institucional</label>
-          <input className="campo-input bg-papel" value={conta.email} disabled />
+          <input className="campo-input bg-papel font-mono" value={conta.utilizador ?? conta.email.split('@')[0]} disabled />
           <p className="text-[11px] text-cinza mt-1">O utilizador não é alterável: é a chave de todo o histórico e auditoria.</p>
         </div>
         <div className="grid sm:grid-cols-2 gap-3.5">
@@ -285,7 +285,8 @@ function EditarConta({ conta, departamentos, fechar, feito }: any) {
 
 function ModalCredencial({ credencial, fechar }: any) {
   const [copiado, setCopiado] = useState(false);
-  const texto = `SIGTEC — Consulado Geral de Angola no Porto\nUtilizador: ${credencial.email}\nPalavra-passe temporária: ${credencial.password}\n\nDeve alterar a palavra-passe no primeiro acesso.`;
+  const utilizador = credencial.utilizador ?? credencial.email.split('@')[0];
+  const texto = `SIGTEC — Consulado Geral de Angola no Porto\nUtilizador: ${utilizador}\nPalavra-passe temporária: ${credencial.password}\n\nDeve alterar a palavra-passe no primeiro acesso.`;
 
   return (
     <Modal titulo="Credenciais de acesso" fechar={fechar} rodape={<button className="btn-secundario" onClick={fechar}>Concluído</button>}>
@@ -294,7 +295,7 @@ function ModalCredencial({ credencial, fechar }: any) {
         <b> a palavra-passe não voltará a ser mostrada</b>.
       </p>
       <div className="bg-preto text-[#EDE9E0] rounded-xl p-4 font-mono text-[13px] space-y-1.5">
-        <div><span className="text-[#A79F92]">Utilizador:</span> {credencial.email}</div>
+        <div><span className="text-[#A79F92]">Utilizador:</span> {credencial.utilizador ?? credencial.email.split('@')[0]}</div>
         <div><span className="text-[#A79F92]">Palavra-passe:</span> <b className="text-douradoClaro">{credencial.password}</b></div>
       </div>
       <button

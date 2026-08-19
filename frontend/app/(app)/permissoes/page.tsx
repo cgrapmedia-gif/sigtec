@@ -36,7 +36,7 @@ export default function PermissoesPage() {
         </p>
       </div>
 
-      <div className="cartao overflow-x-auto">
+      <div className="cartao envolvente-tabela overflow-x-auto">
         <table className="w-full min-w-[720px]">
           <thead>
             <tr>

@@ -92,6 +92,10 @@ export const DESCRICOES: Record<string, string> = {
   'itens.criar': 'Registar novos itens de configuração',
   'itens.editar': 'Editar itens e registar movimentações',
   'itens.relacoes.gerir': 'Definir dependências entre itens',
+  'itens.lote': 'Registar vários itens de uma só vez',
+  'resolucoes.ver': 'Consultar sugestões de resolução',
+  'resolucoes.gerir': 'Criar e editar procedimentos de resolução',
+  'sintomas.gerir': 'Gerir o catálogo de sintomas',
   'categorias.ver': 'Consultar categorias e ciclos de vida',
   'categorias.gerir': 'Criar e alterar categorias e campos próprios',
   'fornecedores.ver': 'Consultar fornecedores',
@@ -128,5 +132,5 @@ export const GRUPOS: Record<string, string> = {
   fornecedores: 'Fornecedores', contratos: 'Contratos', departamentos: 'Departamentos', manutencao: 'Manutenção',
   abate: 'Obsolescência e abate', conhecimento: 'Base de conhecimento',
   questionario: 'Questionário técnico', relatorios: 'Relatórios', auditoria: 'Transparência',
-  users: 'Utilizadores', conta: 'Conta pessoal',
+  resolucoes: 'Resoluções', sintomas: 'Sintomas', users: 'Utilizadores', conta: 'Conta pessoal',
 };

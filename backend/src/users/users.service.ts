@@ -5,7 +5,7 @@ import { AuditoriaService } from '../auditoria/auditoria.service';
 import { NotificacoesService } from '../notificacoes/notificacoes.service';
 
 const SELECT_PUBLICO = {
-  id: true, nome: true, email: true, perfil: true, activo: true,
+  id: true, nome: true, utilizador: true, email: true, perfil: true, activo: true,
   localizacao: true, criadoEm: true, precisaTrocarPassword: true,
   departamento: { select: { id: true, nome: true } },
 };
@@ -57,7 +57,7 @@ export class UsersService {
     if (!base) return { utilizador: '', email: '' };
     let candidato = base;
     let n = 1;
-    while (await this.prisma.user.findUnique({ where: { email: `${candidato}@${DOMINIO_INSTITUCIONAL}` } })) {
+    while (await this.prisma.user.findFirst({ where: { OR: [{ utilizador: candidato }, { email: `${candidato}@${DOMINIO_INSTITUCIONAL}` }] } })) {
       n++;
       candidato = `${base}${n}`;
     }
@@ -74,13 +74,14 @@ export class UsersService {
     if (!/^[a-z0-9]+\.[a-z0-9.]+@/.test(email) && !dto.email) {
       throw new BadRequestException('Não foi possível gerar o utilizador a partir do nome. Indique-o manualmente.');
     }
-    const existe = await this.prisma.user.findUnique({ where: { email } });
+    const existe = await this.prisma.user.findFirst({ where: { OR: [{ utilizador }, { email }] } });
     if (existe) throw new BadRequestException('Já existe uma conta com este utilizador.');
 
     const passwordTemporaria = gerarPasswordTemporaria();
     const user = await this.prisma.user.create({
       data: {
         nome: dto.nome.trim(),
+        utilizador,
         email,
         perfil: dto.perfil,
         passwordHash: await bcrypt.hash(passwordTemporaria, 10),
