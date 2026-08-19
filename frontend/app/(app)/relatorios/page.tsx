@@ -12,6 +12,21 @@ export default function RelatoriosPage() {
 
   useEffect(() => { api('/relatorios').then(setD).catch((e) => setErro(e.message)); }, []);
 
+  /** Abre um PDF autenticado gerado no servidor, já na folha padrão do Consulado */
+  async function abrirPdf(caminho: string, nome: string) {
+    try {
+      const res = await fetch(`${API_BASE}${caminho}`, { headers: { Authorization: `Bearer ${getToken()}` } });
+      if (!res.ok) throw new Error('Não foi possível gerar o documento.');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      if (!window.open(url, '_blank')) {
+        const a = document.createElement('a');
+        a.href = url; a.download = nome; a.click();
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (e: any) { setErro(e.message); }
+  }
+
   async function exportarCsv() {
     try {
       const res = await fetch(`${API_BASE}/relatorios/inventario.csv`, { headers: { Authorization: `Bearer ${getToken()}` } });
@@ -30,8 +45,16 @@ export default function RelatoriosPage() {
     <div className="space-y-5">
       <div className="flex items-center gap-2 flex-wrap print:hidden">
         <h1 className="hidden lg:block text-xl font-bold flex-1">Relatórios &amp; Indicadores</h1>
-        <button className="btn-contorno" onClick={exportarCsv}>⬇ Exportar inventário (CSV)</button>
-        <button className="btn-secundario" onClick={() => window.print()}>🖨 Imprimir relatório</button>
+        <p className="w-full text-[12.5px] text-cinza order-last">
+          Os documentos em PDF saem na folha padrão do Consulado, com emblema, morada e logótipos oficiais.
+        </p>
+        <button className="btn-primario" onClick={() => abrirPdf('/relatorios/relatorio.pdf', 'Relatorio-SIGTEC.pdf')}>
+          📄 Relatório em PDF
+        </button>
+        <button className="btn-contorno" onClick={() => abrirPdf('/relatorios/inventario.pdf', 'Inventario-SIGTEC.pdf')}>
+          📋 Inventário em PDF
+        </button>
+        <button className="btn-contorno" onClick={exportarCsv}>⬇ CSV</button>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 lg:gap-3.5">

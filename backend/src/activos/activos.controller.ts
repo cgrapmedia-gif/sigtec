@@ -16,6 +16,9 @@ export class ActivosController {
   @Get('meus')
   meus(@UserActual() user: any) { return this.svc.meus(user.id); }
 
+  @Get('localizacoes')
+  localizacoes() { return this.svc.localizacoes(); }
+
   @Get('candidatos-abate') @Perfis('ADMIN', 'TECNICO', 'DIRECCAO')
   candidatos() { return this.svc.candidatosAbate(); }
 

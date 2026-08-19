@@ -2,12 +2,121 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { analisarObsolescencia, CICLOS_VIDA } from '../activos/obsolescencia';
 import { resumoExecutivo, riscoFalha } from '../ia/regras';
+import { PdfService } from '../pdf/pdf.service';
+
+const ROTULO_ESTADO: Record<string, string> = {
+  EM_ARMAZEM: 'Em armazém', OPERACIONAL: 'Operacional', EM_MANUTENCAO: 'Em manutenção',
+  AVARIADO: 'Avariado', OBSOLETO: 'Obsoleto', ABATIDO: 'Abatido',
+};
 
 const MESES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 @Injectable()
 export class RelatoriosService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private pdf: PdfService) {}
+
+  /** Lista completa dos bens, com a localização estruturada */
+  async inventarioCompleto(filtros?: { tipo?: string; sector?: string; piso?: string; incluirAbatidos?: boolean }) {
+    const where: any = {};
+    if (!filtros?.incluirAbatidos) where.estado = { not: 'ABATIDO' };
+    if (filtros?.tipo) where.tipo = filtros.tipo;
+    if (filtros?.sector) where.sector = filtros.sector;
+    if (filtros?.piso) where.piso = filtros.piso;
+
+    const itens = await this.prisma.activo.findMany({
+      where,
+      include: {
+        responsavel: { select: { nome: true } },
+        departamento: { select: { nome: true } },
+        categoriaRef: { select: { icone: true } },
+      },
+      orderBy: [{ sector: 'asc' }, { piso: 'asc' }, { sala: 'asc' }, { numInventario: 'asc' }],
+    });
+
+    return itens.map((a) => ({
+      id: a.id,
+      numInventario: a.numInventario,
+      designacao: a.designacao || `${a.marca} ${a.modelo}`,
+      categoria: a.categoria,
+      icone: a.categoriaRef?.icone ?? null,
+      tipo: a.tipo,
+      numSerie: a.numSerie,
+      piso: a.piso ?? '',
+      sala: a.sala ?? '',
+      sector: a.sector ?? '',
+      posto: a.posto ?? '',
+      localizacao: a.localizacao,
+      responsavel: a.responsavel?.nome ?? '',
+      departamento: a.departamento?.nome ?? '',
+      estado: a.estado,
+      dataAquisicao: a.dataAquisicao,
+      fimGarantia: a.fimGarantia,
+    }));
+  }
+
+  /** PDF do inventário na folha padrão do Consulado */
+  async pdfInventario(filtros: any, emitidoPor: string) {
+    const itens = await this.inventarioCompleto(filtros);
+    const partes = [filtros?.sector && `Sector: ${filtros.sector}`, filtros?.piso && `Piso: ${filtros.piso}`].filter(Boolean);
+    return this.pdf.gerarInventario({
+      itens: itens.map((i) => ({
+        numInventario: i.numInventario, designacao: i.designacao, piso: i.piso,
+        sala: i.sala, sector: i.sector, responsavel: i.responsavel, estado: ROTULO_ESTADO[i.estado] ?? i.estado,
+      })),
+      filtro: partes.length ? partes.join(' · ') : undefined,
+      emitidoPor,
+    });
+  }
+
+  /** PDF do relatório executivo na folha padrão do Consulado */
+  async pdfRelatorio(emitidoPor: string) {
+    const d = await this.indicadores();
+    return this.pdf.gerarRelatorio({
+      titulo: 'Relatório de Gestão Tecnológica',
+      subtitulo: `Período até ${new Date().toLocaleDateString('pt-PT')}`,
+      emitidoPor,
+      seccoes: [
+        {
+          titulo: 'Resumo executivo',
+          texto: d.resumo,
+          indicadores: [
+            { rotulo: 'Activos', valor: String(d.totais.activos) },
+            { rotulo: 'Pedidos resolvidos', valor: String(d.totais.resolvidos) },
+            { rotulo: 'SLA cumprido', valor: `${d.desempenho.slaCumpridoPct}%` },
+            { rotulo: 'Tempo médio', valor: `${d.desempenho.tempoMedioHoras}h` },
+          ],
+        },
+        {
+          titulo: 'Equipamentos com maior taxa de falha',
+          colunas: [
+            { rotulo: 'Inventário', largura: 90 }, { rotulo: 'Equipamento', largura: 230 },
+            { rotulo: 'Falhas (6 meses)', largura: 90, alinhar: 'right' },
+          ],
+          linhas: d.topFalhas.map((t: any) => [t.numInventario, `${t.marca} ${t.modelo}`, String(t.falhas6m)]),
+        },
+        {
+          titulo: 'Plano de renovação proposto',
+          texto: d.planoRenovacao.length
+            ? `Investimento total estimado: ${d.custoEstimadoRenovacao.toLocaleString('pt-PT')}€.`
+            : 'Nenhum equipamento cumpre os critérios de substituição neste período.',
+          colunas: d.planoRenovacao.length
+            ? [{ rotulo: 'Inventário', largura: 85 }, { rotulo: 'Equipamento', largura: 150 },
+               { rotulo: 'Motivos', largura: 200 }, { rotulo: 'Estimativa', largura: 65, alinhar: 'right' as const }]
+            : undefined,
+          linhas: d.planoRenovacao.length
+            ? d.planoRenovacao.map((p: any) => [
+                p.numInventario, p.equipamento, p.motivos.join('; '),
+                p.estimativa ? `${p.estimativa.toLocaleString('pt-PT')}€` : '—',
+              ])
+            : undefined,
+        },
+      ],
+      assinatura: {
+        esquerda: { papel: 'O Serviço de Informática', nome: emitidoPor },
+        direita: { papel: 'A Direcção', nome: '' },
+      },
+    });
+  }
 
   /** Indicadores calculados a partir dos dados reais — nada é fixo no código */
   async indicadores() {
@@ -126,12 +235,16 @@ export class RelatoriosService {
       include: { departamento: true, responsavel: { select: { nome: true } } },
       orderBy: { numInventario: 'asc' },
     });
-    const cab = ['N.º Inventário', 'Categoria', 'Marca', 'Modelo', 'N.º Série', 'Aquisição', 'Fim de garantia', 'Localização', 'Departamento', 'Responsável', 'Estado', 'Falhas 6m'];
+    const cab = ['N.º Inventário', 'Tipo', 'Categoria', 'Designação', 'Marca', 'Modelo', 'N.º Série',
+      'Piso', 'Sala', 'Sector', 'Posto', 'Departamento', 'Responsável', 'Estado',
+      'Aquisição', 'Fim de garantia', 'Falhas 6m'];
     const linhas = activos.map((a) => [
-      a.numInventario, a.categoria, a.marca, a.modelo, a.numSerie ?? '',
+      a.numInventario, a.tipo, a.categoria, a.designacao ?? `${a.marca} ${a.modelo}`, a.marca, a.modelo, a.numSerie ?? '',
+      a.piso ?? '', a.sala ?? '', a.sector ?? '', a.posto ?? '',
+      a.departamento?.nome ?? '', a.responsavel?.nome ?? '', a.estado,
       new Date(a.dataAquisicao).toISOString().slice(0, 10),
       a.fimGarantia ? new Date(a.fimGarantia).toISOString().slice(0, 10) : '',
-      a.localizacao, a.departamento?.nome ?? '', a.responsavel?.nome ?? '', a.estado, String(a.falhas6m),
+      String(a.falhas6m),
     ].map((c) => `"${String(c).replace(/"/g, '""')}"`).join(';'));
     return '\uFEFF' + [cab.join(';'), ...linhas].join('\n');
   }

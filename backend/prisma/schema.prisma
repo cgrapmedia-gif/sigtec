@@ -193,6 +193,10 @@ model Activo {
   dataAquisicao     DateTime
   fimGarantia       DateTime?
   localizacao       String
+  piso              String?
+  sala              String?
+  sector            String?
+  posto             String?
   departamento      Departamento? @relation(fields: [departamentoId], references: [id])
   departamentoId    String?
   responsavel       User?         @relation(fields: [responsavelId], references: [id])

@@ -55,8 +55,12 @@ export class ActivosService {
   meus(userId: string) {
     return this.prisma.activo.findMany({
       where: { responsavelId: userId, estado: { not: 'ABATIDO' } },
-      select: { id: true, numInventario: true, categoria: true, marca: true, modelo: true, localizacao: true, estado: true, tipo: true },
-      orderBy: { numInventario: 'asc' },
+      select: {
+        id: true, numInventario: true, categoria: true, marca: true, modelo: true, designacao: true,
+        localizacao: true, piso: true, sala: true, sector: true, posto: true, estado: true, tipo: true,
+        categoriaRef: { select: { icone: true } },
+      },
+      orderBy: [{ sector: 'asc' }, { numInventario: 'asc' }],
     });
   }
 
@@ -127,7 +131,11 @@ export class ActivosService {
         marca: dto.marca || '—', modelo: dto.modelo || '—', numSerie: dto.numSerie || null,
         dataAquisicao: new Date(dto.dataAquisicao ?? Date.now()),
         fimGarantia: dto.fimGarantia ? new Date(dto.fimGarantia) : null,
-        localizacao: dto.localizacao?.trim() || 'Por definir',
+        localizacao: dto.localizacao?.trim() || [dto.piso, dto.sala].filter(Boolean).join(' · ') || 'Por definir',
+        piso: dto.piso?.trim() || null,
+        sala: dto.sala?.trim() || null,
+        sector: dto.sector?.trim() || null,
+        posto: dto.posto?.trim() || null,
         departamentoId: dto.departamentoId || null,
         responsavelId: dto.responsavelId || null,
         fornecedorId: dto.fornecedorId || null,
@@ -171,8 +179,15 @@ export class ActivosService {
     if (!antes) throw new NotFoundException('Item não encontrado.');
 
     const dados: any = {};
-    for (const c of ['designacao', 'marca', 'modelo', 'numSerie', 'localizacao', 'estado', 'tipo']) {
-      if (dto[c] !== undefined) dados[c] = dto[c];
+    for (const c of ['designacao', 'marca', 'modelo', 'numSerie', 'localizacao', 'estado', 'tipo', 'piso', 'sala', 'sector', 'posto']) {
+      if (dto[c] !== undefined) dados[c] = dto[c] || null;
+    }
+    // Mantém a localização legível coerente com piso e sala
+    if ((dto.piso !== undefined || dto.sala !== undefined) && dto.localizacao === undefined) {
+      const piso = dto.piso ?? antes.piso;
+      const sala = dto.sala ?? antes.sala;
+      const composta = [piso, sala].filter(Boolean).join(' · ');
+      if (composta) dados.localizacao = composta;
     }
     if (dto.categoriaId !== undefined) {
       dados.categoriaId = dto.categoriaId || null;
@@ -279,6 +294,17 @@ export class ActivosService {
       criticos: afectados.filter((a) => a.critica || a.criticidade >= 4).length,
       afectados,
     };
+  }
+
+  /** Valores já usados em piso, sala e sector — alimentam as sugestões dos formulários */
+  async localizacoes() {
+    const activos = await this.prisma.activo.findMany({
+      where: { estado: { not: 'ABATIDO' } },
+      select: { piso: true, sala: true, sector: true, posto: true },
+    });
+    const unicos = (campo: 'piso' | 'sala' | 'sector' | 'posto') =>
+      Array.from(new Set(activos.map((a) => a[campo]).filter(Boolean) as string[])).sort();
+    return { pisos: unicos('piso'), salas: unicos('sala'), sectores: unicos('sector'), postos: unicos('posto') };
   }
 
   async candidatosAbate() {

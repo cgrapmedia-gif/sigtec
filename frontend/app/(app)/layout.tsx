@@ -11,6 +11,7 @@ const NAV: Item[] = [
   { href: '/painel', nome: 'Painel', curto: 'Painel', ico: '▦', grupo: 'Visão', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO', 'FUNCIONARIO'] },
   { href: '/pedidos', nome: 'Pedidos Técnicos', curto: 'Pedidos', ico: '⚑', grupo: 'Operação', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO', 'FUNCIONARIO'] },
   { href: '/activos', nome: 'Itens de Configuração', curto: 'Itens', ico: '⛁', grupo: 'Operação', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO'] },
+  { href: '/inventario', nome: 'Inventário Geral', curto: 'Invent.', ico: '📋', grupo: 'Operação', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO'] },
   { href: '/abate', nome: 'Obsolescência & Abate', curto: 'Abate', ico: '♻', grupo: 'Operação', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO'] },
   { href: '/manutencao', nome: 'Manutenção Preventiva', curto: 'Manut.', ico: '⚙', grupo: 'Operação', perfis: ['ADMIN', 'TECNICO'] },
   { href: '/conhecimento', nome: 'Base de Conhecimento', curto: 'Ajuda', ico: '📖', grupo: 'Conhecimento', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO', 'FUNCIONARIO'] },

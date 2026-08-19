@@ -125,6 +125,7 @@ async function main() {
   const A = async (a: {
     num: string; cat: string; marca: string; modelo: string; serie?: string;
     aq: string; gar?: string; loc: string; dep: string; respId?: string;
+    piso?: string; sala?: string; sector?: string; posto?: string;
     estado?: EstadoActivo; falhas?: number; disco?: boolean; custoRep?: number; valorSubst?: number;
   }) =>
     prisma.activo.upsert({
@@ -134,26 +135,33 @@ async function main() {
         numInventario: a.num, categoria: a.cat, marca: a.marca, modelo: a.modelo, numSerie: a.serie,
         dataAquisicao: new Date(a.aq), fimGarantia: a.gar ? new Date(a.gar) : null,
         localizacao: a.loc, departamentoId: deps[a.dep], responsavelId: a.respId,
+        piso: a.piso ?? null, sala: a.sala ?? null, sector: a.sector ?? null, posto: a.posto ?? null,
         categoriaId: catIds[a.cat] ?? null,
         estado: a.estado ?? EstadoActivo.OPERACIONAL, falhas6m: a.falhas ?? 0,
         temDisco: a.disco ?? false, custoReparacao: a.custoRep, valorSubstituicao: a.valorSubst,
       },
     });
 
-  const a3 = await A({ num: 'CGA-INF-0003', cat: 'Computador', marca: 'Dell', modelo: 'OptiPlex 3080', serie: '7YHKQ93', aq: '2020-11-02', gar: '2023-11-02', loc: 'Balcão 3 — Atendimento', dep: 'Atendimento Consular', estado: EstadoActivo.AVARIADO, falhas: 8, disco: true, custoRep: 340, valorSubst: 620 });
-  const a8 = await A({ num: 'CGA-INF-0008', cat: 'Impressora', marca: 'HP', modelo: 'LaserJet Pro M404dn', serie: 'PHBNK07731', aq: '2019-05-30', gar: '2022-05-30', loc: 'Secretaria', dep: 'Secretaria', respId: func.id, estado: EstadoActivo.OBSOLETO, falhas: 6, custoRep: 210, valorSubst: 380 });
-  await A({ num: 'CGA-INF-0001', cat: 'Computador', marca: 'HP', modelo: 'ProDesk 400 G7', serie: 'CZC1234XKL', aq: '2022-03-14', gar: '2025-03-14', loc: 'Balcão 1 — Atendimento', dep: 'Atendimento Consular', falhas: 1, disco: true });
-  await A({ num: 'CGA-INF-0002', cat: 'Computador', marca: 'HP', modelo: 'ProDesk 400 G7', serie: 'CZC1234XKM', aq: '2022-03-14', gar: '2025-03-14', loc: 'Balcão 2 — Atendimento', dep: 'Atendimento Consular', disco: true });
-  const a4 = await A({ num: 'CGA-INF-0004', cat: 'Computador', marca: 'Lenovo', modelo: 'ThinkCentre M70q', serie: 'PF3XW22B', aq: '2023-06-20', gar: '2026-06-20', loc: 'Secretaria', dep: 'Secretaria', respId: func.id, disco: true });
-  await A({ num: 'CGA-INF-0005', cat: 'Leitor biométrico', marca: 'Dermalog', modelo: 'ZF1', serie: 'DL-88412', aq: '2021-09-10', gar: '2024-09-10', loc: 'Balcão 1 — Atendimento', dep: 'Atendimento Consular', falhas: 2 });
-  const a6 = await A({ num: 'CGA-INF-0006', cat: 'Leitor biométrico', marca: 'Dermalog', modelo: 'ZF1', serie: 'DL-88413', aq: '2021-09-10', gar: '2024-09-10', loc: 'Balcão 2 — Atendimento', dep: 'Atendimento Consular', estado: EstadoActivo.EM_MANUTENCAO, falhas: 5 });
-  const a7 = await A({ num: 'CGA-INF-0007', cat: 'Impressora', marca: 'Kyocera', modelo: 'ECOSYS M3145dn', serie: 'VLK9202417', aq: '2022-01-18', gar: '2025-01-18', loc: 'Sala comum — 1.º andar', dep: 'Serviços Gerais', falhas: 3 });
-  const a9 = await A({ num: 'CGA-INF-0009', cat: 'Servidor', marca: 'Dell', modelo: 'PowerEdge T350', serie: 'JW2JQ04', aq: '2023-02-08', gar: '2028-02-08', loc: 'Sala técnica', dep: 'Informática', disco: true });
-  await A({ num: 'CGA-INF-0010', cat: 'Switch', marca: 'Cisco', modelo: 'SG300-52P', serie: 'DNI163504K2', aq: '2018-07-12', gar: '2021-07-12', loc: 'Sala técnica', dep: 'Informática', falhas: 1 });
-  const a11 = await A({ num: 'CGA-INF-0011', cat: 'UPS', marca: 'APC', modelo: 'Smart-UPS 1500VA', serie: 'AS1927110342', aq: '2021-04-22', gar: '2024-04-22', loc: 'Sala técnica', dep: 'Informática', estado: EstadoActivo.EM_MANUTENCAO, falhas: 2 });
-  await A({ num: 'CGA-INF-0012', cat: 'Telefone IP', marca: 'Yealink', modelo: 'T33G', serie: 'YL2024887701', aq: '2024-02-15', gar: '2027-02-15', loc: 'Gabinete do Cônsul-Geral', dep: 'Direcção' });
-  await A({ num: 'CGA-INF-0013', cat: 'Scanner', marca: 'Fujitsu', modelo: 'fi-7160', serie: 'A3C0019442', aq: '2022-10-05', gar: '2025-10-05', loc: 'Arquivo', dep: 'Secretaria', respId: func.id, falhas: 1 });
-  await A({ num: 'CGA-INF-0014', cat: 'Router', marca: 'Cisco Meraki', modelo: 'MX84', serie: 'Q2QN-9J8L-JKMV', aq: '2020-03-01', gar: '2027-03-01', loc: 'Sala técnica', dep: 'Informática' });
+  const a3 = await A({ num: 'CGA-INF-0003', piso: 'Piso 1', sala: 'Sala de Atendimento', sector: 'Atendimento (frontoffice)', posto: 'Balcão 3', cat: 'Computador', marca: 'Dell', modelo: 'OptiPlex 3080', serie: '7YHKQ93', aq: '2020-11-02', gar: '2023-11-02', loc: 'Balcão 3 — Atendimento', dep: 'Atendimento Consular', estado: EstadoActivo.AVARIADO, falhas: 8, disco: true, custoRep: 340, valorSubst: 620 });
+  const a8 = await A({ num: 'CGA-INF-0008', piso: 'Piso 2', sala: 'Secretaria', sector: 'Secretaria (backoffice)', cat: 'Impressora', marca: 'HP', modelo: 'LaserJet Pro M404dn', serie: 'PHBNK07731', aq: '2019-05-30', gar: '2022-05-30', loc: 'Secretaria', dep: 'Secretaria', respId: func.id, estado: EstadoActivo.OBSOLETO, falhas: 6, custoRep: 210, valorSubst: 380 });
+  await A({ num: 'CGA-INF-0001', piso: 'Piso 1', sala: 'Sala de Atendimento', sector: 'Atendimento (frontoffice)', posto: 'Balcão 1', cat: 'Computador', marca: 'HP', modelo: 'ProDesk 400 G7', serie: 'CZC1234XKL', aq: '2022-03-14', gar: '2025-03-14', loc: 'Balcão 1 — Atendimento', dep: 'Atendimento Consular', falhas: 1, disco: true });
+  await A({ num: 'CGA-INF-0002', piso: 'Piso 1', sala: 'Sala de Atendimento', sector: 'Atendimento (frontoffice)', posto: 'Balcão 2', cat: 'Computador', marca: 'HP', modelo: 'ProDesk 400 G7', serie: 'CZC1234XKM', aq: '2022-03-14', gar: '2025-03-14', loc: 'Balcão 2 — Atendimento', dep: 'Atendimento Consular', disco: true });
+  const a4 = await A({ num: 'CGA-INF-0004', piso: 'Piso 2', sala: 'Secretaria', sector: 'Secretaria (backoffice)', posto: 'Posto 1', cat: 'Computador', marca: 'Lenovo', modelo: 'ThinkCentre M70q', serie: 'PF3XW22B', aq: '2023-06-20', gar: '2026-06-20', loc: 'Secretaria', dep: 'Secretaria', respId: func.id, disco: true });
+  await A({ num: 'CGA-INF-0005', piso: 'Piso 1', sala: 'Sala de Atendimento', sector: 'Atendimento (frontoffice)', posto: 'Balcão 1', cat: 'Leitor biométrico', marca: 'Dermalog', modelo: 'ZF1', serie: 'DL-88412', aq: '2021-09-10', gar: '2024-09-10', loc: 'Balcão 1 — Atendimento', dep: 'Atendimento Consular', falhas: 2 });
+  const a6 = await A({ num: 'CGA-INF-0006', piso: 'Piso 1', sala: 'Sala de Atendimento', sector: 'Atendimento (frontoffice)', posto: 'Balcão 2', cat: 'Leitor biométrico', marca: 'Dermalog', modelo: 'ZF1', serie: 'DL-88413', aq: '2021-09-10', gar: '2024-09-10', loc: 'Balcão 2 — Atendimento', dep: 'Atendimento Consular', estado: EstadoActivo.EM_MANUTENCAO, falhas: 5 });
+  const a7 = await A({ num: 'CGA-INF-0007', piso: 'Piso 1', sala: 'Sala comum', sector: 'Serviços Gerais', cat: 'Impressora', marca: 'Kyocera', modelo: 'ECOSYS M3145dn', serie: 'VLK9202417', aq: '2022-01-18', gar: '2025-01-18', loc: 'Sala comum — 1.º andar', dep: 'Serviços Gerais', falhas: 3 });
+  const a9 = await A({ num: 'CGA-INF-0009', piso: 'Piso 0', sala: 'Sala técnica', sector: 'Informática', cat: 'Servidor', marca: 'Dell', modelo: 'PowerEdge T350', serie: 'JW2JQ04', aq: '2023-02-08', gar: '2028-02-08', loc: 'Sala técnica', dep: 'Informática', disco: true });
+  await A({ num: 'CGA-INF-0010', piso: 'Piso 0', sala: 'Sala técnica', sector: 'Informática', cat: 'Switch', marca: 'Cisco', modelo: 'SG300-52P', serie: 'DNI163504K2', aq: '2018-07-12', gar: '2021-07-12', loc: 'Sala técnica', dep: 'Informática', falhas: 1 });
+  const a11 = await A({ num: 'CGA-INF-0011', piso: 'Piso 0', sala: 'Sala técnica', sector: 'Informática', cat: 'UPS', marca: 'APC', modelo: 'Smart-UPS 1500VA', serie: 'AS1927110342', aq: '2021-04-22', gar: '2024-04-22', loc: 'Sala técnica', dep: 'Informática', estado: EstadoActivo.EM_MANUTENCAO, falhas: 2 });
+  await A({ num: 'CGA-INF-0012', piso: 'Piso 2', sala: 'Gabinete do Cônsul-Geral', sector: 'Direcção', cat: 'Telefone IP', marca: 'Yealink', modelo: 'T33G', serie: 'YL2024887701', aq: '2024-02-15', gar: '2027-02-15', loc: 'Gabinete do Cônsul-Geral', dep: 'Direcção' });
+  await A({ num: 'CGA-INF-0013', piso: 'Piso 2', sala: 'Arquivo', sector: 'Secretaria (backoffice)', cat: 'Scanner', marca: 'Fujitsu', modelo: 'fi-7160', serie: 'A3C0019442', aq: '2022-10-05', gar: '2025-10-05', loc: 'Arquivo', dep: 'Secretaria', respId: func.id, falhas: 1 });
+  await A({ num: 'CGA-INF-0014', piso: 'Piso 0', sala: 'Sala técnica', sector: 'Informática', cat: 'Router', marca: 'Cisco Meraki', modelo: 'MX84', serie: 'Q2QN-9J8L-JKMV', aq: '2020-03-01', gar: '2027-03-01', loc: 'Sala técnica', dep: 'Informática' });
+
+  // Segundo posto da mesma funcionária: um computador no atendimento e outro no backoffice
+  await A({ num: 'CGA-INF-0015', cat: 'Computador', marca: 'HP', modelo: 'ProDesk 400 G7', serie: 'CZC1234XKP',
+    aq: '2023-01-20', gar: '2026-01-20', loc: 'Piso 1 · Sala de Atendimento', dep: 'Atendimento Consular',
+    respId: func.id, piso: 'Piso 1', sala: 'Sala de Atendimento', sector: 'Atendimento (frontoffice)',
+    posto: 'Balcão 4', disco: true });
 
   // Itens não-informáticos: serviços, software e infraestrutura
   const contratoNet = await prisma.contrato.findUnique({ where: { numero: 'CT-2026-001' } });
@@ -163,7 +171,8 @@ async function main() {
   const net = await itemExtra('CGA-SRV-0001', {
     tipo: 'SERVICO', designacao: 'Ligação de Internet dedicada — sede', categoria: 'Ligação de Internet',
     categoriaId: catIds['Ligação de Internet'], marca: 'NOS', modelo: 'Fibra Empresas 500',
-    dataAquisicao: new Date('2024-09-01'), localizacao: 'Sala técnica', departamentoId: deps['Informática'],
+    dataAquisicao: new Date('2024-09-01'), localizacao: 'Piso 0 · Sala técnica', departamentoId: deps['Informática'],
+    piso: 'Piso 0', sala: 'Sala técnica', sector: 'Informática',
     fornecedorId: nos.id, contratoId: contratoNet?.id ?? null, criticidade: 5,
     camposPersonalizados: { larguraBanda: '500/500 Mbps', ipFixo: '188.82.___.___', tecnologia: 'Fibra óptica' },
   });
@@ -172,12 +181,14 @@ async function main() {
     categoriaId: catIds['Licença de Software'], marca: 'ESET', modelo: 'PROTECT Entry',
     dataAquisicao: new Date('2025-10-01'), fimGarantia: new Date('2026-10-01'),
     localizacao: 'Todo o Consulado', departamentoId: deps['Informática'], criticidade: 4,
+    sector: 'Informática',
     camposPersonalizados: { postos: 14, postosInstalados: 14, versao: '11.1', fimSuporte: '2028-12-31' },
   });
   await itemExtra('CGA-INFR-0001', {
     tipo: 'INFRAESTRUTURA', designacao: 'Climatização da sala técnica', categoria: 'Climatização',
     categoriaId: catIds['Climatização'], marca: 'Daikin', modelo: 'FTXM35R',
-    dataAquisicao: new Date('2021-06-15'), localizacao: 'Sala técnica', departamentoId: deps['Informática'], criticidade: 5,
+    dataAquisicao: new Date('2021-06-15'), localizacao: 'Piso 0 · Sala técnica', departamentoId: deps['Informática'], criticidade: 5,
+    piso: 'Piso 0', sala: 'Sala técnica', sector: 'Informática',
   });
 
   // Relações: o que depende de quê (base da análise de impacto)

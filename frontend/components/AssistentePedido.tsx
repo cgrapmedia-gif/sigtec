@@ -190,13 +190,41 @@ export default function AssistentePedido({ fechar, feito, sintomaInicial }: any)
 
               {meusItens.length > 0 && (
                 <div className="mb-3.5">
-                  <label className="campo-rotulo">Qual equipamento? (opcional)</label>
-                  <select className="campo-input" value={activoId} onChange={(e) => setActivoId(e.target.value)}>
-                    <option value="">— Não sei / não se aplica —</option>
+                  <label className="campo-rotulo">
+                    {meusItens.length > 1 ? 'Qual dos seus equipamentos?' : 'O seu equipamento'}
+                  </label>
+                  <div className="space-y-2">
                     {meusItens.map((a) => (
-                      <option key={a.id} value={a.id}>{a.numInventario} · {a.categoria} {a.marca}</option>
+                      <button key={a.id} type="button" onClick={() => setActivoId(activoId === a.id ? '' : a.id)}
+                        className={`w-full flex items-center gap-3 border rounded-xl px-3.5 py-3 text-left transition min-h-[56px] ${
+                          activoId === a.id ? 'border-vermelho bg-vermelho/5' : 'border-linha hover:border-dourado'
+                        }`}>
+                        <span className="text-xl shrink-0">{a.categoriaRef?.icone ?? '💻'}</span>
+                        <span className="flex-1 min-w-0">
+                          <b className="block text-[13.5px] leading-snug">
+                            {a.sector || a.posto || a.categoria}
+                          </b>
+                          <span className="block text-[11.5px] text-cinza">
+                            {a.designacao || `${a.marca} ${a.modelo}`}
+                            {(a.piso || a.sala) && ` · ${[a.piso, a.sala].filter(Boolean).join(' · ')}`}
+                          </span>
+                          <span className="block text-[10.5px] text-cinza font-mono">{a.numInventario}</span>
+                        </span>
+                        {activoId === a.id && <span className="text-vermelho font-bold">✓</span>}
+                      </button>
                     ))}
-                  </select>
+                    <button type="button" onClick={() => setActivoId('')}
+                      className={`w-full border rounded-xl px-3.5 py-2.5 text-left text-[13px] transition ${
+                        activoId === '' ? 'border-vermelho bg-vermelho/5' : 'border-linha hover:border-dourado'
+                      }`}>
+                      Não sei / não se aplica
+                    </button>
+                  </div>
+                  {meusItens.length > 1 && (
+                    <p className="text-[11px] text-dourado mt-1.5">
+                      ✓ Tem {meusItens.length} equipamentos atribuídos — escolha aquele que tem o problema
+                    </p>
+                  )}
                 </div>
               )}
 

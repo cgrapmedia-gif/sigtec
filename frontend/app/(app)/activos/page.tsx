@@ -27,6 +27,8 @@ export default function ActivosPage() {
   const [fornecedores, setFornecedores] = useState<any[]>([]);
   const [contratos, setContratos] = useState<any[]>([]);
   const [utilizadores, setUtilizadores] = useState<any[]>([]);
+  const [localizacoes, setLocalizacoes] = useState<any>({ pisos: [], salas: [], sectores: [], postos: [] });
+  const [filtroSector, setFiltroSector] = useState('');
   const [filtroTipo, setFiltroTipo] = useState('');
   const [impacto, setImpacto] = useState<any>(null);
   const [lote, setLote] = useState(false);
@@ -45,6 +47,7 @@ export default function ActivosPage() {
     api('/fornecedores').then(setFornecedores).catch(() => {});
     api('/contratos').then(setContratos).catch(() => {});
     api('/users/simples').then(setUtilizadores).catch(() => {});
+    api('/activos/localizacoes').then(setLocalizacoes).catch(() => {});
   }, []);
   useEffect(carregar, [carregar]);
 
@@ -53,6 +56,7 @@ export default function ActivosPage() {
   const cats = Array.from(new Set(activos.map((a) => a.categoria))).sort();
   const lista = activos.filter((a) =>
     (!filtroTipo || a.tipo === filtroTipo) &&
+    (!filtroSector || a.sector === filtroSector) &&
     (!filtroCat || a.categoria === filtroCat) && (!filtroEst || a.estado === filtroEst) &&
     (a.numInventario + a.marca + a.modelo + (a.designacao ?? '') + a.localizacao + (a.numSerie ?? '')).toLowerCase().includes(pesquisa.toLowerCase()),
   );
@@ -87,6 +91,10 @@ export default function ActivosPage() {
           <option value="">Todos os tipos</option>
           {Object.entries(TIPOS).map(([v, r]) => <option key={v} value={v}>{r}</option>)}
         </select>
+        <select className="campo-input w-auto" value={filtroSector} onChange={(e) => setFiltroSector(e.target.value)}>
+          <option value="">Todos os sectores</option>
+          {localizacoes.sectores.map((x: string) => <option key={x} value={x}>{x}</option>)}
+        </select>
         <select className="campo-input w-auto" value={filtroEst} onChange={(e) => setFiltroEst(e.target.value)}>
           <option value="">Todos os estados</option>
           {Object.keys(ESTADO_ACTIVO).map((e) => <option key={e} value={e}>{ESTADO_ACTIVO[e].rotulo}</option>)}
@@ -113,7 +121,14 @@ export default function ActivosPage() {
                     {a.tipo !== 'EQUIPAMENTO' && <span className="pill bg-linha text-cinza ml-1.5">{TIPOS[a.tipo]}</span>}
                   </span>
                 </td>
-                <td data-rotulo="Localização" className="td">{a.localizacao}</td>
+                <td data-rotulo="Onde está" className="td">
+                  <span className="block">{[a.piso, a.sala].filter(Boolean).join(' · ') || a.localizacao}</span>
+                  {(a.sector || a.responsavel) && (
+                    <span className="block text-[11px] text-cinza">
+                      {[a.sector, a.responsavel?.nome].filter(Boolean).join(' · ')}
+                    </span>
+                  )}
+                </td>
                 <td data-rotulo="Idade / Ciclo" className={`td font-mono text-xs ${idadeAnos(a.dataAquisicao) > a.cicloVida ? 'text-vermelho' : ''}`}>
                   {idadeAnos(a.dataAquisicao).toFixed(1)} / {a.cicloVida} anos
                 </td>
@@ -148,6 +163,7 @@ export default function ActivosPage() {
           todosItens={activos}
           utilizadores={utilizadores}
           recarregarListas={carregar}
+          localizacoes={localizacoes}
           fechar={() => setEditar(null)}
           feito={() => { setEditar(null); carregar(); }}
         />
@@ -366,7 +382,7 @@ function FichaActivo({ activo, fechar, recarregar, todosItens }: any) {
 }
 
 /* ---------- Registo / edição ---------- */
-function FormActivo({ activo, departamentos, categorias, fornecedores, contratos, todosItens, utilizadores, recarregarListas, fechar, feito }: any) {
+function FormActivo({ activo, departamentos, categorias, fornecedores, contratos, todosItens, utilizadores, recarregarListas, localizacoes, fechar, feito }: any) {
   const novo = !activo.id;
   const [f, setF] = useState<any>({
     numInventario: activo.numInventario ?? '',
@@ -382,6 +398,10 @@ function FormActivo({ activo, departamentos, categorias, fornecedores, contratos
     dataAquisicao: paraInput(activo.dataAquisicao) || new Date().toISOString().slice(0, 10),
     fimGarantia: paraInput(activo.fimGarantia),
     localizacao: activo.localizacao ?? '',
+    piso: activo.piso ?? '',
+    sala: activo.sala ?? '',
+    sector: activo.sector ?? '',
+    posto: activo.posto ?? '',
     departamentoId: activo.departamentoId ?? '',
     responsavelId: activo.responsavelId ?? '',
     estado: activo.estado ?? 'OPERACIONAL',
@@ -483,9 +503,43 @@ function FormActivo({ activo, departamentos, categorias, fornecedores, contratos
               <label className="campo-rotulo">N.º de série</label>
               <input className="campo-input font-mono" value={f.numSerie} onChange={(e) => set('numSerie', e.target.value)} />
             </div>
-            <div>
-              <label className="campo-rotulo">Localização</label>
-              <input className="campo-input" value={f.localizacao} onChange={(e) => set('localizacao', e.target.value)} placeholder="Ex.: Balcão 1 — Atendimento" />
+            <div className="lg:col-span-2">
+              <fieldset className="border border-linha rounded-xl p-3.5">
+                <legend className="text-[11.5px] font-semibold uppercase tracking-wide text-cinza px-1.5">
+                  Onde está o equipamento
+                </legend>
+                <div className="grid lg:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="campo-rotulo">Piso / Andar</label>
+                    <input className="campo-input" value={f.piso} onChange={(e) => set('piso', e.target.value)}
+                      list="lista-pisos" placeholder="Ex.: Piso 1" />
+                    <datalist id="lista-pisos">{(localizacoes?.pisos ?? []).map((x: string) => <option key={x} value={x} />)}</datalist>
+                  </div>
+                  <div>
+                    <label className="campo-rotulo">Sala</label>
+                    <input className="campo-input" value={f.sala} onChange={(e) => set('sala', e.target.value)}
+                      list="lista-salas" placeholder="Ex.: Sala 12" />
+                    <datalist id="lista-salas">{(localizacoes?.salas ?? []).map((x: string) => <option key={x} value={x} />)}</datalist>
+                  </div>
+                  <div>
+                    <label className="campo-rotulo">Sector</label>
+                    <input className="campo-input" value={f.sector} onChange={(e) => set('sector', e.target.value)}
+                      list="lista-sectores" placeholder="Ex.: Atendimento (frontoffice)" />
+                    <datalist id="lista-sectores">{(localizacoes?.sectores ?? []).map((x: string) => <option key={x} value={x} />)}</datalist>
+                  </div>
+                  <div>
+                    <label className="campo-rotulo">Posto de trabalho</label>
+                    <input className="campo-input" value={f.posto} onChange={(e) => set('posto', e.target.value)}
+                      list="lista-postos" placeholder="Ex.: Balcão 1" />
+                    <datalist id="lista-postos">{(localizacoes?.postos ?? []).map((x: string) => <option key={x} value={x} />)}</datalist>
+                  </div>
+                </div>
+                <p className="text-[11px] text-cinza mt-2">
+                  O sector distingue, por exemplo, o computador do <b>atendimento</b> do computador de
+                  <b> backoffice</b> do mesmo funcionário — é o que lhe permite identificar o equipamento certo
+                  ao abrir um pedido.
+                </p>
+              </fieldset>
             </div>
             <div>
               <label className="campo-rotulo">Data de aquisição</label>
