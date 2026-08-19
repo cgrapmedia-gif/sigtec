@@ -8,14 +8,18 @@ import Notificacoes from '@/components/Notificacoes';
 const NAV = [
   { href: '/painel', nome: 'Painel Geral', ico: '▦', grupo: 'Visão', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO', 'FUNCIONARIO'] },
   { href: '/pedidos', nome: 'Pedidos Técnicos', ico: '⚑', grupo: 'Operação', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO', 'FUNCIONARIO'] },
-  { href: '/activos', nome: 'Inventário de Activos', ico: '⛁', grupo: 'Operação', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO'] },
+  { href: '/activos', nome: 'Itens de Configuração', ico: '⛁', grupo: 'Operação', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO'] },
   { href: '/abate', nome: 'Obsolescência & Abate', ico: '♻', grupo: 'Operação', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO'] },
   { href: '/manutencao', nome: 'Manutenção Preventiva', ico: '⚙', grupo: 'Operação', perfis: ['ADMIN', 'TECNICO'] },
   { href: '/conhecimento', nome: 'Base de Conhecimento', ico: '📖', grupo: 'Conhecimento', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO', 'FUNCIONARIO'] },
   { href: '/questionario', nome: 'Questionário Técnico', ico: '✎', grupo: 'Conhecimento', perfis: ['ADMIN', 'TECNICO'] },
   { href: '/relatorios', nome: 'Relatórios & Indicadores', ico: '▤', grupo: 'Conhecimento', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO'] },
   { href: '/transparencia', nome: 'Transparência', ico: '◉', grupo: 'Governação Digital', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO', 'FUNCIONARIO'] },
+  { href: '/categorias', nome: 'Categorias', ico: '🏷', grupo: 'Configuração', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO'] },
+  { href: '/fornecedores', nome: 'Fornecedores & Contratos', ico: '🤝', grupo: 'Configuração', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO'] },
+  { href: '/departamentos', nome: 'Departamentos', ico: '🏛', grupo: 'Configuração', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO'] },
   { href: '/utilizadores', nome: 'Utilizadores', ico: '👤', grupo: 'Administração', perfis: ['ADMIN', 'DIRECCAO'] },
+  { href: '/permissoes', nome: 'Quadro de Permissões', ico: '🔒', grupo: 'Administração', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO', 'FUNCIONARIO'] },
   { href: '/conta', nome: 'A Minha Conta', ico: '🔑', grupo: 'Administração', perfis: ['ADMIN', 'TECNICO', 'DIRECCAO', 'FUNCIONARIO'] },
 ];
 
@@ -44,7 +48,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen">
-      <aside className={`w-[250px] bg-preto text-[#EDE9E0] flex flex-col fixed inset-y-0 left-0 z-40 transition-transform md:translate-x-0 ${menuAberto ? '' : '-translate-x-full md:translate-x-0'}`}>
+      <aside className={`barra-lateral w-[250px] max-w-[82vw] bg-preto text-[#EDE9E0] flex flex-col fixed inset-y-0 left-0 z-40 transition-transform md:translate-x-0 ${menuAberto ? '' : '-translate-x-full md:translate-x-0'}`}>
         <div className="p-5 border-b border-white/10">
           <div className="text-xl font-bold">SIG<span className="text-douradoClaro">TEC</span> 2.0</div>
           <div className="text-[10px] uppercase tracking-wider text-[#A79F92] mt-1 leading-snug">
@@ -78,14 +82,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
+      {menuAberto && <div className="fixed inset-0 bg-preto/50 z-30 md:hidden" onClick={() => setMenuAberto(false)} />}
+
       <main className="flex-1 md:ml-[250px] px-4 md:px-7 pb-10 max-w-[1240px]">
-        <header className="flex items-center gap-3 py-3.5 border-b border-linha mb-5">
-          <button className="md:hidden border border-linha rounded-lg px-2.5 py-1.5" onClick={() => setMenuAberto(!menuAberto)}>☰</button>
+        <header className="flex items-center gap-3 py-3.5 border-b border-linha mb-5 sticky top-0 bg-papel z-20">
+          <button className="md:hidden border border-linha rounded-lg w-11 h-11 text-lg bg-white" onClick={() => setMenuAberto(!menuAberto)} aria-label="Menu">☰</button>
           <div className="flex-1" />
           <span className="hidden sm:inline text-[11px] text-cinza">Sessão auditada · Data Tracker activo</span>
           <Notificacoes />
         </header>
         {children}
+        <div className="h-[env(safe-area-inset-bottom)]" />
       </main>
     </div>
   );

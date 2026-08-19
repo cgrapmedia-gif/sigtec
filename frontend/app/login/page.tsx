@@ -3,11 +3,17 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, setSessao } from '@/lib/api';
 
+/**
+ * Contas de demonstração — visíveis apenas quando NEXT_PUBLIC_MODO_DEMO=1.
+ * Em produção o bloco não é apresentado: expor credenciais no ecrã de login
+ * é uma vulnerabilidade, não uma funcionalidade.
+ */
+const MODO_DEMO = process.env.NEXT_PUBLIC_MODO_DEMO === '1';
 const CONTAS = [
-  { email: 'l.baptista@consuladoporto.gov.ao', nome: 'Luísa Baptista', cargo: 'Funcionária — Secretaria', ini: 'LB', cor: 'bg-azul' },
-  { email: 'r.sousa@consuladoporto.gov.ao', nome: 'Rui Sousa', cargo: 'Técnico de Informática', ini: 'RS', cor: 'bg-verde' },
-  { email: 'c.miranda@consuladoporto.gov.ao', nome: 'Carlos Miranda', cargo: 'Administrador do Sistema', ini: 'CM', cor: 'bg-vermelho' },
-  { email: 'direccao@consuladoporto.gov.ao', nome: 'Ana Van-Dúnem', cargo: 'Direcção', ini: 'DV', cor: 'bg-dourado' },
+  { email: 'luisa.baptista@consuladoporto.gov.ao', nome: 'Luísa Baptista', cargo: 'Funcionária — Secretaria', ini: 'LB', cor: 'bg-azul' },
+  { email: 'rui.sousa@consuladoporto.gov.ao', nome: 'Rui Sousa', cargo: 'Técnico de Informática', ini: 'RS', cor: 'bg-verde' },
+  { email: 'carlos.miranda@consuladoporto.gov.ao', nome: 'Carlos Miranda', cargo: 'Administrador do Sistema', ini: 'CM', cor: 'bg-vermelho' },
+  { email: 'ana.vandunem@consuladoporto.gov.ao', nome: 'Ana Van-Dúnem', cargo: 'Direcção', ini: 'DV', cor: 'bg-dourado' },
 ];
 
 export default function LoginPage() {
@@ -24,7 +30,7 @@ export default function LoginPage() {
     try {
       const r = await api('/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ email: emailDirecto ?? email, password: password || 'sigtec2026' }),
+        body: JSON.stringify({ email: emailDirecto ?? email, password: password || (MODO_DEMO ? 'sigtec2026' : '') }),
       });
       setSessao(r.access_token, r.user);
       router.push('/painel');
@@ -72,7 +78,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-[11px] uppercase tracking-wide text-cinza mb-2">Contas de demonstração (password: sigtec2026)</p>
+          {MODO_DEMO && (
+          <>
+          <p className="text-[11px] uppercase tracking-wide text-cinza mb-2">Contas de demonstração (modo demo)</p>
           <div className="space-y-2">
             {CONTAS.map((c) => (
               <button key={c.email} onClick={() => entrar(undefined, c.email)}
@@ -86,6 +94,14 @@ export default function LoginPage() {
               </button>
             ))}
           </div>
+          </>
+          )}
+          {!MODO_DEMO && (
+            <p className="text-[11.5px] text-cinza border-t border-linha pt-4">
+              Não tem acesso? As contas são criadas por convite do Administrador do Sistema.
+              O utilizador segue o formato <b>primeiro.ultimo</b>@consuladoporto.gov.ao
+            </p>
+          )}
         </section>
       </div>
     </main>

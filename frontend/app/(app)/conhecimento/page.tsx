@@ -142,14 +142,14 @@ function FormArtigo({ artigo, fechar, feito }: any) {
 
 function Modal({ titulo, children, rodape, fechar }: any) {
   return (
-    <div className="fixed inset-0 bg-preto/55 z-50 flex items-start justify-center p-4 pt-12 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl">
-        <div className="flex items-center px-5 py-4 border-b border-linha">
+    <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
+      <div className="modal-caixa sm:max-w-2xl">
+        <div className="modal-cabecalho">
           <h3 className="font-bold flex-1">{titulo}</h3>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>
         </div>
-        <div className="p-5">{children}</div>
-        <div className="px-5 py-4 border-t border-linha flex justify-end gap-2.5 flex-wrap">{rodape}</div>
+        <div className="modal-corpo">{children}</div>
+        <div className="modal-rodape">{rodape}</div>
       </div>
     </div>
   );

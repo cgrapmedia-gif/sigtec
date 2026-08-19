@@ -191,15 +191,15 @@ function NovaProposta({ activos, fechar, feito }: any) {
   }
 
   return (
-    <div className="fixed inset-0 bg-preto/55 z-50 flex items-start justify-center p-4 pt-12 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl">
-        <div className="flex items-center px-5 py-4 border-b border-linha">
+    <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
+      <div className="modal-caixa sm:max-w-2xl">
+        <div className="modal-cabecalho">
           <h3 className="font-bold flex-1">
             Iniciar processo de abate — {lista.length === 1 ? primeiro.numInventario : `${lista.length} equipamentos`}
           </h3>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>
         </div>
-        <div className="p-5">
+        <div className="modal-corpo">
           <p className="text-[13px] bg-gradient-to-br from-[#FDF9EE] to-[#F7EFD8] border border-douradoClaro rounded-lg p-3 mb-4">
             <b>Motivo pré-preenchido pela análise automática:</b>
             {lista.length === 1 ? (
@@ -239,7 +239,7 @@ function NovaProposta({ activos, fechar, feito }: any) {
           </div>
           {erro && <p className="text-vermelho text-sm mt-2">{erro}</p>}
         </div>
-        <div className="px-5 py-4 border-t border-linha flex justify-end gap-2.5">
+        <div className="modal-rodape">
           <button className="btn-contorno" onClick={fechar}>Cancelar</button>
           <button className="btn-primario" onClick={criar}>Registar parecer e criar proposta</button>
         </div>
@@ -264,13 +264,13 @@ function ModalRejeicao({ proposta, fechar, feito }: any) {
   }
 
   return (
-    <div className="fixed inset-0 bg-preto/55 z-50 flex items-start justify-center p-4 pt-12 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl">
-        <div className="flex items-center px-5 py-4 border-b border-linha">
+    <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
+      <div className="modal-caixa sm:max-w-xl">
+        <div className="modal-cabecalho">
           <h3 className="font-bold flex-1">Rejeitar a proposta {proposta.numero}</h3>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>
         </div>
-        <div className="p-5">
+        <div className="modal-corpo">
           <p className="text-[13px] text-cinza mb-3">
             A fundamentação fica registada no processo e é comunicada ao Administrador e à equipa técnica.
             Os equipamentos mantêm-se em inventário e podem ser objecto de nova proposta.
@@ -280,7 +280,7 @@ function ModalRejeicao({ proposta, fechar, feito }: any) {
             placeholder="Ex.: Reavaliar a hipótese de reparação com fornecedor alternativo antes do abate." />
           {erro && <p className="text-vermelho text-sm mt-2">{erro}</p>}
         </div>
-        <div className="px-5 py-4 border-t border-linha flex justify-end gap-2.5">
+        <div className="modal-rodape">
           <button className="btn-contorno" onClick={fechar}>Cancelar</button>
           <button className="btn-primario" onClick={rejeitar} disabled={aGuardar}>{aGuardar ? 'A registar…' : 'Rejeitar proposta'}</button>
         </div>

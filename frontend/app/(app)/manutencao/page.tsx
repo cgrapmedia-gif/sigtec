@@ -92,13 +92,13 @@ function NovaOrdem({ activos, fechar, feito }: any) {
   }
 
   return (
-    <div className="fixed inset-0 bg-preto/55 z-50 flex items-start justify-center p-4 pt-12 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl">
-        <div className="flex items-center px-5 py-4 border-b border-linha">
+    <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
+      <div className="modal-caixa sm:max-w-xl">
+        <div className="modal-cabecalho">
           <h3 className="font-bold flex-1">Nova ordem de manutenção</h3>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>
         </div>
-        <div className="p-5 space-y-3.5">
+        <div className="modal-corpo space-y-3.5">
           <div>
             <label className="campo-rotulo">Tarefa</label>
             <input className="campo-input" value={tarefa} onChange={(e) => setTarefa(e.target.value)} placeholder="Ex.: Substituição de baterias da UPS" />
@@ -137,7 +137,7 @@ function NovaOrdem({ activos, fechar, feito }: any) {
           </div>
           {erro && <p className="text-vermelho text-sm">{erro}</p>}
         </div>
-        <div className="px-5 py-4 border-t border-linha flex justify-end gap-2.5">
+        <div className="modal-rodape">
           <button className="btn-contorno" onClick={fechar}>Cancelar</button>
           <button className="btn-primario" onClick={criar} disabled={aGuardar}>{aGuardar ? 'A criar…' : 'Criar ordem'}</button>
         </div>

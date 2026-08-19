@@ -56,23 +56,23 @@ export default function PedidosPage() {
         </select>
       </div>
 
-      <div className="cartao overflow-x-auto">
-        <table className="w-full min-w-[640px]">
+      <div className="cartao envolvente-tabela overflow-x-auto">
+        <table className="w-full tabela-adaptavel sm:min-w-[640px]">
           <thead><tr><th className="th">N.º</th><th className="th">Assunto</th><th className="th">Prioridade / SLA</th><th className="th">Estado</th><th className="th">Data</th></tr></thead>
           <tbody>
             {lista.map((p) => (
               <tr key={p.id} className="cursor-pointer hover:bg-[#FAF8F3]" onClick={() => abrirDetalhe(p.id)}>
-                <td className="td font-mono text-xs text-vermelho font-semibold">#{p.numero}</td>
-                <td className="td">
+                <td data-principal className="td font-mono text-xs text-vermelho font-semibold">#{p.numero}</td>
+                <td data-rotulo="Assunto" className="td">
                   <span className="font-medium">{p.assunto}</span>
                   <span className="block text-[11px] text-cinza">{p.categoria} · {p.autor?.nome}</span>
                 </td>
-                <td className="td">
+                <td data-rotulo="Prioridade / SLA" className="td">
                   <span className={`pill ${PRIORIDADE[p.prioridade].classe}`}>{PRIORIDADE[p.prioridade].rotulo}</span>
                   <span className="block mt-1"><EstadoSla sla={p.sla} horas={p.slaHoras} /></span>
                 </td>
-                <td className="td"><span className={`pill ${ESTADO_PEDIDO[p.estado].classe}`}>{ESTADO_PEDIDO[p.estado].rotulo}</span></td>
-                <td className="td font-mono text-xs">
+                <td data-rotulo="Estado" className="td"><span className={`pill ${ESTADO_PEDIDO[p.estado].classe}`}>{ESTADO_PEDIDO[p.estado].rotulo}</span></td>
+                <td data-rotulo="Data" className="td font-mono text-xs">
                   {fmtData(p.criadoEm)}
                   {['RESOLVIDO', 'FECHADO'].includes(p.estado) && p.autor?.nome === user?.nome && (
                     p.satisfacao
@@ -270,14 +270,14 @@ function Info({ rotulo, valor, mono }: { rotulo: string; valor: string; mono?: b
 
 function Modal({ titulo, children, rodape, fechar }: any) {
   return (
-    <div className="fixed inset-0 bg-preto/55 z-50 flex items-start justify-center p-4 pt-12 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl">
-        <div className="flex items-center px-5 py-4 border-b border-linha">
+    <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
+      <div className="modal-caixa sm:max-w-2xl">
+        <div className="modal-cabecalho">
           <h3 className="font-bold flex-1 font-mono text-vermelho">{titulo}</h3>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>
         </div>
-        <div className="p-5">{children}</div>
-        <div className="px-5 py-4 border-t border-linha flex justify-end gap-2.5 flex-wrap">{rodape}</div>
+        <div className="modal-corpo">{children}</div>
+        <div className="modal-rodape">{rodape}</div>
       </div>
     </div>
   );

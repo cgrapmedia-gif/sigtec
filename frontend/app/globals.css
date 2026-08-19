@@ -2,24 +2,99 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------- Base ---------- */
+html {
+  -webkit-text-size-adjust: 100%;      /* impede o iOS de reescalar texto na rotação */
+  -webkit-tap-highlight-color: transparent;
+}
 body {
   @apply bg-papel text-preto antialiased;
+  overscroll-behavior-y: none;          /* evita o "puxar para actualizar" acidental */
 }
 
+/* ---------- Componentes ---------- */
 .cartao {
-  @apply bg-white border border-linha rounded-xl shadow-cartao p-5;
+  @apply bg-white border border-linha rounded-xl shadow-cartao p-4 sm:p-5;
 }
 .pill {
   @apply inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap;
 }
 .btn {
-  @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition hover:brightness-110 disabled:opacity-50;
+  @apply inline-flex items-center justify-center gap-2 px-4 rounded-lg text-[13px] font-semibold transition hover:brightness-110 disabled:opacity-50;
+  min-height: 44px;                     /* alvo de toque recomendado em iOS e Android */
 }
 .btn-primario { @apply btn bg-vermelho text-white; }
 .btn-secundario { @apply btn bg-preto text-white; }
 .btn-dourado { @apply btn bg-dourado text-white; }
 .btn-contorno { @apply btn bg-white border border-linha; }
+
 .campo-rotulo { @apply block text-[11.5px] font-semibold uppercase tracking-wide text-cinza mb-1; }
-.campo-input { @apply w-full px-3 py-2.5 border border-linha rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-dourado; }
+.campo-input {
+  @apply w-full px-3 py-2.5 border border-linha rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-dourado;
+  font-size: 16px;                      /* < 16px faz o Safari do iOS ampliar ao focar */
+  min-height: 44px;
+}
+@screen sm { .campo-input { @apply text-sm; } }
+
 .th { @apply text-left text-[10.5px] uppercase tracking-wider text-cinza font-semibold px-2.5 py-2 border-b-2 border-linha; }
 .td { @apply px-2.5 py-2.5 border-b border-linha align-middle text-[13px]; }
+
+/* ---------- Tabelas adaptáveis a telemóvel ----------
+   Em ecrãs estreitos cada linha passa a cartão, com o nome da coluna
+   à esquerda (vindo do atributo data-rotulo) e o valor à direita.        */
+@media (max-width: 700px) {
+  .tabela-adaptavel { @apply min-w-0 w-full; }
+  .tabela-adaptavel thead { @apply hidden; }
+  .tabela-adaptavel tr {
+    @apply block bg-white border border-linha rounded-xl mb-2.5 p-3 shadow-sm;
+  }
+  .tabela-adaptavel td {
+    @apply block border-0 px-0 py-1 text-left;
+  }
+  .tabela-adaptavel td[data-rotulo]::before {
+    content: attr(data-rotulo);
+    @apply block text-[10px] uppercase tracking-wider text-cinza font-semibold mb-0.5;
+  }
+  .tabela-adaptavel td:empty { @apply hidden; }
+  .tabela-adaptavel td[data-principal] {
+    @apply text-[15px] font-semibold pb-1 mb-1 border-b border-linha;
+  }
+  .tabela-adaptavel td[data-principal]::before { content: none; }
+  .tabela-adaptavel td[data-accoes] {
+    @apply flex flex-wrap gap-2 pt-2.5 mt-1 border-t border-linha;
+  }
+  .tabela-adaptavel td[data-accoes]::before { content: none; }
+  .tabela-adaptavel td[data-accoes] .btn { @apply flex-1; }
+  .envolvente-tabela { @apply overflow-visible; }
+}
+
+/* ---------- Modais em ecrã inteiro no telemóvel ---------- */
+.modal-fundo {
+  @apply fixed inset-0 bg-preto/55 z-50 flex items-end sm:items-start justify-center overflow-y-auto;
+  padding: 0;
+}
+@screen sm { .modal-fundo { @apply p-4 pt-12; } }
+.modal-caixa {
+  @apply bg-white w-full shadow-2xl;
+  border-radius: 18px 18px 0 0;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding-bottom: env(safe-area-inset-bottom);  /* barra inferior do iPhone */
+}
+@screen sm {
+  .modal-caixa { @apply rounded-2xl max-h-none; }
+}
+.modal-cabecalho {
+  @apply flex items-center px-4 sm:px-5 py-4 border-b border-linha sticky top-0 bg-white z-10;
+}
+.modal-corpo { @apply p-4 sm:p-5; }
+.modal-rodape {
+  @apply px-4 sm:px-5 py-4 border-t border-linha flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 sticky bottom-0 bg-white;
+}
+
+/* ---------- Barra lateral: área segura em iOS ---------- */
+.barra-lateral { padding-bottom: env(safe-area-inset-bottom); }
+
+@media print {
+  .sem-impressao { display: none !important; }
+}

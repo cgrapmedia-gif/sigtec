@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#16130F"/>
+  <rect x="96" y="300" width="160" height="10" fill="#B5121B"/>
+  <rect x="256" y="300" width="160" height="10" fill="#B8860B"/>
+  <text x="256" y="270" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="150" font-weight="700"
+        fill="#EDE9E0" text-anchor="middle">SIG</text>
+  <text x="256" y="400" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="150" font-weight="700"
+        fill="#E8D9A0" text-anchor="middle">TEC</text>
+</svg>

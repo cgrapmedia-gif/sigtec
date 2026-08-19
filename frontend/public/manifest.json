@@ -1,0 +1,14 @@
+{
+  "name": "SIGTEC Consulado",
+  "short_name": "SIGTEC",
+  "description": "Gestão Tecnológica e Manutenção — Consulado Geral de Angola no Porto",
+  "start_url": "/painel",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F4F2ED",
+  "theme_color": "#16130F",
+  "lang": "pt-PT",
+  "icons": [
+    { "src": "/icone.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

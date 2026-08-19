@@ -18,11 +18,12 @@ export default function UtilizadoresPage() {
   const [departamentos, setDepartamentos] = useState<any[]>([]);
   const [novo, setNovo] = useState(false);
   const [credencial, setCredencial] = useState<{ nome: string; email: string; password: string } | null>(null);
+  const [editarUser, setEditarUser] = useState<any>(null);
   const [msg, setMsg] = useState('');
 
   const carregar = useCallback(() => {
     api('/users').then(setUsers).catch((e) => setMsg(e.message));
-    api('/users/departamentos').then(setDepartamentos).catch(() => {});
+    api('/departamentos').then(setDepartamentos).catch(() => {});
   }, []);
   useEffect(carregar, [carregar]);
 
@@ -54,8 +55,8 @@ export default function UtilizadoresPage() {
       </p>
       {msg && <p className="text-vermelho text-sm">{msg}</p>}
 
-      <div className="cartao overflow-x-auto">
-        <table className="w-full min-w-[680px]">
+      <div className="cartao envolvente-tabela overflow-x-auto">
+        <table className="w-full tabela-adaptavel sm:min-w-[680px]">
           <thead>
             <tr>
               <th className="th">Nome</th><th className="th">Email institucional</th><th className="th">Perfil</th>
@@ -65,26 +66,29 @@ export default function UtilizadoresPage() {
           <tbody>
             {users.map((u) => (
               <tr key={u.id} className={u.activo ? '' : 'opacity-55'}>
-                <td className="td">
+                <td data-principal className="td">
                   <span className="font-medium">{u.nome}</span>
                   <span className="block text-[11px] text-cinza">Desde {fmtData(u.criadoEm)}</span>
                 </td>
-                <td className="td text-[12.5px]">{u.email}</td>
-                <td className="td"><span className={`pill ${rotuloPerfil(u.perfil).classe}`}>{rotuloPerfil(u.perfil).rotulo}</span></td>
-                <td className="td text-[12.5px]">{u.departamento?.nome ?? '—'}</td>
-                <td className="td">
+                <td data-rotulo="Utilizador" className="td text-[12.5px] break-all">{u.email}</td>
+                <td data-rotulo="Perfil" className="td"><span className={`pill ${rotuloPerfil(u.perfil).classe}`}>{rotuloPerfil(u.perfil).rotulo}</span></td>
+                <td data-rotulo="Departamento" className="td text-[12.5px]">{u.departamento?.nome ?? '—'}</td>
+                <td data-rotulo="Estado" className="td">
                   {u.activo
                     ? <span className="pill bg-verde/10 text-verde">Activa</span>
                     : <span className="pill bg-linha text-cinza">Desactivada</span>}
                   {u.precisaTrocarPassword && u.activo && <span className="pill bg-ambar/10 text-ambar ml-1">Password temporária</span>}
                 </td>
                 {podeGerir && (
-                  <td className="td text-right whitespace-nowrap">
+                  <td data-accoes className="td text-right whitespace-nowrap">
+                    {u.id !== user?.id && (
+                      <button className="btn-contorno !min-h-0 !px-2.5 !py-1 !text-[11px] mr-1" onClick={() => setEditarUser(u)}>Editar</button>
+                    )}
                     {u.activo && u.id !== user?.id && (
-                      <button className="btn-contorno !px-2.5 !py-1 !text-[11px] mr-1" onClick={() => reporPassword(u)}>Repor password</button>
+                      <button className="btn-contorno !min-h-0 !px-2.5 !py-1 !text-[11px] mr-1" onClick={() => reporPassword(u)}>Repor password</button>
                     )}
                     {u.id !== user?.id && (
-                      <button className="btn-contorno !px-2.5 !py-1 !text-[11px]" onClick={() => alternarActivo(u)}>
+                      <button className="btn-contorno !min-h-0 !px-2.5 !py-1 !text-[11px]" onClick={() => alternarActivo(u)}>
                         {u.activo ? 'Desactivar' : 'Reactivar'}
                       </button>
                     )}
@@ -106,6 +110,15 @@ export default function UtilizadoresPage() {
       )}
 
       {credencial && <ModalCredencial credencial={credencial} fechar={() => setCredencial(null)} />}
+
+      {editarUser && (
+        <EditarConta
+          conta={editarUser}
+          departamentos={departamentos}
+          fechar={() => setEditarUser(null)}
+          feito={() => { setEditarUser(null); carregar(); }}
+        />
+      )}
     </div>
   );
 }
@@ -113,6 +126,19 @@ export default function UtilizadoresPage() {
 function NovaConta({ departamentos, fechar, feito }: any) {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
+  const [emailManual, setEmailManual] = useState(false);
+
+  // Utilizador institucional gerado do nome: «Luísa Baptista» → luisa.baptista
+  useEffect(() => {
+    if (emailManual || nome.trim().length < 3) return;
+    const t = setTimeout(async () => {
+      try {
+        const r = await api(`/users/sugerir-utilizador?nome=${encodeURIComponent(nome)}`);
+        if (r.email) setEmail(r.email);
+      } catch { /* sugestão é auxiliar */ }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [nome, emailManual]);
   const [perfil, setPerfil] = useState('FUNCIONARIO');
   const [departamentoId, setDepartamentoId] = useState('');
   const [localizacao, setLocalizacao] = useState('');
@@ -150,8 +176,13 @@ function NovaConta({ departamentos, fechar, feito }: any) {
           <input className="campo-input" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Maria Fernandes" />
         </div>
         <div>
-          <label className="campo-rotulo">Email institucional</label>
-          <input className="campo-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nome@consuladoporto.gov.ao" />
+          <label className="campo-rotulo">Utilizador institucional</label>
+          <input className="campo-input" type="email" value={email}
+            onChange={(e) => { setEmail(e.target.value); setEmailManual(true); }}
+            placeholder="primeiro.ultimo@consuladoporto.gov.ao" />
+          {!emailManual && email && (
+            <p className="text-[11px] text-dourado mt-1">✓ Gerado do nome no formato institucional primeiro.ultimo</p>
+          )}
         </div>
         <div className="grid sm:grid-cols-2 gap-3.5">
           <div>
@@ -177,6 +208,75 @@ function NovaConta({ departamentos, fechar, feito }: any) {
           O sistema gera uma palavra-passe temporária que lhe será mostrada uma única vez. O utilizador terá de a
           substituir obrigatoriamente no primeiro acesso.
         </p>
+        {erro && <p className="text-vermelho text-sm">{erro}</p>}
+      </div>
+    </Modal>
+  );
+}
+
+function EditarConta({ conta, departamentos, fechar, feito }: any) {
+  const [nome, setNome] = useState(conta.nome);
+  const [perfil, setPerfil] = useState(conta.perfil);
+  const [departamentoId, setDepartamentoId] = useState(conta.departamento?.id ?? '');
+  const [localizacao, setLocalizacao] = useState(conta.localizacao ?? '');
+  const [erro, setErro] = useState('');
+  const [aGuardar, setAGuardar] = useState(false);
+
+  async function guardar() {
+    setErro('');
+    if (nome.trim().length < 3) { setErro('Indique o nome completo.'); return; }
+    setAGuardar(true);
+    try {
+      await api(`/users/${conta.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ nome, perfil, departamentoId: departamentoId || null, localizacao: localizacao || null }),
+      });
+      feito();
+    } catch (e: any) { setErro(e.message); } finally { setAGuardar(false); }
+  }
+
+  return (
+    <Modal titulo={`Editar ${conta.nome}`} fechar={fechar} rodape={
+      <>
+        <button className="btn-contorno" onClick={fechar}>Cancelar</button>
+        <button className="btn-primario" onClick={guardar} disabled={aGuardar}>{aGuardar ? 'A guardar…' : 'Guardar alterações'}</button>
+      </>
+    }>
+      <div className="space-y-3.5">
+        <div>
+          <label className="campo-rotulo">Nome completo</label>
+          <input className="campo-input" value={nome} onChange={(e) => setNome(e.target.value)} />
+        </div>
+        <div>
+          <label className="campo-rotulo">Utilizador institucional</label>
+          <input className="campo-input bg-papel" value={conta.email} disabled />
+          <p className="text-[11px] text-cinza mt-1">O utilizador não é alterável: é a chave de todo o histórico e auditoria.</p>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-3.5">
+          <div>
+            <label className="campo-rotulo">Perfil de acesso</label>
+            <select className="campo-input" value={perfil} onChange={(e) => setPerfil(e.target.value)}>
+              {PERFIS.map((p) => <option key={p.valor} value={p.valor}>{p.rotulo}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="campo-rotulo">Departamento</label>
+            <select className="campo-input" value={departamentoId} onChange={(e) => setDepartamentoId(e.target.value)}>
+              <option value="">— Não atribuído —</option>
+              {departamentos.map((d: any) => <option key={d.id} value={d.id}>{d.nome}</option>)}
+            </select>
+          </div>
+        </div>
+        <div>
+          <label className="campo-rotulo">Posto de trabalho</label>
+          <input className="campo-input" value={localizacao} onChange={(e) => setLocalizacao(e.target.value)} placeholder="Ex.: Balcão 1 — Atendimento" />
+        </div>
+        {perfil !== conta.perfil && (
+          <p className="text-[12.5px] bg-gradient-to-br from-[#FDF9EE] to-[#F7EFD8] border border-douradoClaro rounded-lg p-3">
+            ⚠ Vai alterar o perfil de <b>{conta.perfil}</b> para <b>{perfil}</b>. O utilizador será notificado e as
+            permissões mudam de imediato.
+          </p>
+        )}
         {erro && <p className="text-vermelho text-sm">{erro}</p>}
       </div>
     </Modal>
@@ -209,14 +309,14 @@ function ModalCredencial({ credencial, fechar }: any) {
 
 function Modal({ titulo, children, rodape, fechar }: any) {
   return (
-    <div className="fixed inset-0 bg-preto/55 z-50 flex items-start justify-center p-4 pt-12 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && fechar()}>
-      <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl">
-        <div className="flex items-center px-5 py-4 border-b border-linha">
+    <div className="modal-fundo" onClick={(e) => e.target === e.currentTarget && fechar()}>
+      <div className="modal-caixa sm:max-w-xl">
+        <div className="modal-cabecalho">
           <h3 className="font-bold flex-1">{titulo}</h3>
           <button className="text-cinza text-xl px-2" onClick={fechar}>✕</button>
         </div>
-        <div className="p-5">{children}</div>
-        <div className="px-5 py-4 border-t border-linha flex justify-end gap-2.5 flex-wrap">{rodape}</div>
+        <div className="modal-corpo">{children}</div>
+        <div className="modal-rodape">{rodape}</div>
       </div>
     </div>
   );
