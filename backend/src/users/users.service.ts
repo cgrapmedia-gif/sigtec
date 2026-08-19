@@ -10,6 +10,19 @@ const SELECT_PUBLICO = {
   departamento: { select: { id: true, nome: true } },
 };
 
+/** Normaliza um nome para utilizador: «Luísa Baptista» → «luisa.baptista» */
+export function utilizadorDe(nome: string): string {
+  const partes = nome.trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // remove acentos
+    .replace(/[^a-z\s-]/g, '')
+    .split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return '';
+  if (partes.length === 1) return partes[0];
+  return `${partes[0]}.${partes[partes.length - 1]}`;
+}
+
+export const DOMINIO_INSTITUCIONAL = 'consuladoporto.gov.ao';
+
 /** Gera uma palavra-passe temporária legível (ex.: SIGTEC-4821-kx) */
 function gerarPasswordTemporaria(): string {
   const num = Math.floor(1000 + Math.random() * 9000);
@@ -30,13 +43,39 @@ export class UsersService {
   }
 
   /** Contas criadas apenas por convite do Administrador (RF-AUTH-02) */
+  listarSimples() {
+    return this.prisma.user.findMany({
+      where: { activo: true },
+      select: { id: true, nome: true, perfil: true, localizacao: true, departamento: { select: { nome: true } } },
+      orderBy: { nome: 'asc' },
+    });
+  }
+
+  /** Sugere o utilizador institucional a partir do nome, garantindo unicidade */
+  async sugerirUtilizador(nome: string) {
+    const base = utilizadorDe(nome);
+    if (!base) return { utilizador: '', email: '' };
+    let candidato = base;
+    let n = 1;
+    while (await this.prisma.user.findUnique({ where: { email: `${candidato}@${DOMINIO_INSTITUCIONAL}` } })) {
+      n++;
+      candidato = `${base}${n}`;
+    }
+    return { utilizador: candidato, email: `${candidato}@${DOMINIO_INSTITUCIONAL}` };
+  }
+
   async criar(
-    dto: { nome: string; email: string; perfil: any; departamentoId?: string; localizacao?: string },
+    dto: { nome: string; email?: string; utilizador?: string; perfil: any; departamentoId?: string; localizacao?: string },
     quem: { nome: string; perfil: string },
   ) {
-    const email = dto.email.toLowerCase().trim();
+    // O utilizador segue o formato institucional primeiro.ultimo
+    const utilizador = (dto.utilizador?.trim() || utilizadorDe(dto.nome)).toLowerCase();
+    const email = (dto.email?.trim() || `${utilizador}@${DOMINIO_INSTITUCIONAL}`).toLowerCase();
+    if (!/^[a-z0-9]+\.[a-z0-9.]+@/.test(email) && !dto.email) {
+      throw new BadRequestException('Não foi possível gerar o utilizador a partir do nome. Indique-o manualmente.');
+    }
     const existe = await this.prisma.user.findUnique({ where: { email } });
-    if (existe) throw new BadRequestException('Já existe uma conta com este email.');
+    if (existe) throw new BadRequestException('Já existe uma conta com este utilizador.');
 
     const passwordTemporaria = gerarPasswordTemporaria();
     const user = await this.prisma.user.create({
@@ -65,6 +104,26 @@ export class UsersService {
 
     // A password temporária é devolvida uma única vez, para entrega ao utilizador
     return { user, passwordTemporaria };
+  }
+
+  /** Alteração de perfil, departamento e posto pelo Administrador */
+  async actualizar(id: string, dto: any, quem: { nome: string; perfil: string }) {
+    const antes = await this.prisma.user.findUniqueOrThrow({ where: { id } });
+    const dados: any = {};
+    if (dto.nome !== undefined) dados.nome = String(dto.nome).trim();
+    if (dto.perfil !== undefined) dados.perfil = dto.perfil;
+    if (dto.departamentoId !== undefined) dados.departamentoId = dto.departamentoId || null;
+    if (dto.localizacao !== undefined) dados.localizacao = dto.localizacao || null;
+    const user = await this.prisma.user.update({ where: { id }, data: dados, select: SELECT_PUBLICO });
+    if (dto.perfil && dto.perfil !== antes.perfil) {
+      await this.notificacoes.criar(id, 'Perfil de acesso alterado', `O seu perfil passou a ${dto.perfil}.`, '/permissoes');
+    }
+    await this.auditoria.registar({
+      quemNome: quem.nome, quemPerfil: quem.perfil,
+      accao: `Actualizou a conta de ${antes.nome}${dto.perfil && dto.perfil !== antes.perfil ? ` (perfil: ${antes.perfil} → ${dto.perfil})` : ''}`,
+      titularNome: antes.nome,
+    });
+    return user;
   }
 
   async definirActivo(id: string, activo: boolean, quem: { nome: string; perfil: string }) {

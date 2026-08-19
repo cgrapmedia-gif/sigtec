@@ -18,6 +18,24 @@ enum Perfil {
   DIRECCAO
 }
 
+enum TipoItem {
+  EQUIPAMENTO
+  SOFTWARE
+  SERVICO
+  CONTRATO
+  INFRAESTRUTURA
+  CONSUMIVEL
+}
+
+enum TipoRelacao {
+  DEPENDE_DE
+  ALIMENTA
+  INSTALADO_EM
+  LIGADO_A
+  COBERTO_POR
+  SUBSTITUI
+}
+
 enum EstadoActivo {
   EM_ARMAZEM
   OPERACIONAL
@@ -48,6 +66,78 @@ enum EstadoProposta {
   AGUARDA_APROVACAO
   APROVADA
   REJEITADA
+}
+
+/// Categoria configurável pelo Administrador — define ciclo de vida e campos próprios
+model Categoria {
+  id              String   @id @default(cuid())
+  nome            String   @unique
+  tipo            TipoItem @default(EQUIPAMENTO)
+  icone           String?
+  cicloVidaMeses  Int      @default(72)
+  falhasCriticas  Int      @default(5)
+  racioReparacao  Int      @default(50)
+  esquemaCampos   Json?
+  rotinaTarefa    String?
+  rotinaMeses     Int?
+  activa          Boolean  @default(true)
+  criadoEm        DateTime @default(now())
+
+  activos Activo[]
+}
+
+/// Fornecedores de equipamento, software e serviços
+model Fornecedor {
+  id           String     @id @default(cuid())
+  nome         String     @unique
+  nif          String?
+  contactoNome String?
+  telefone     String?
+  email        String?
+  apoioTecnico String?
+  observacoes  String?
+  activo       Boolean    @default(true)
+  criadoEm     DateTime   @default(now())
+
+  contratos Contrato[]
+  itens     Activo[]
+}
+
+/// Contratos e subscrições com alertas de renovação
+model Contrato {
+  id                 String     @id @default(cuid())
+  numero             String     @unique
+  designacao         String
+  tipo               String
+  fornecedor         Fornecedor @relation(fields: [fornecedorId], references: [id])
+  fornecedorId       String
+  dataInicio         DateTime
+  dataFim            DateTime?
+  renovacaoAutomatica Boolean   @default(false)
+  avisoDias          Int        @default(60)
+  valorMensal        Decimal?   @db.Decimal(10, 2)
+  slaHoras           Int?
+  numeroCliente      String?
+  observacoes        String?
+  activo             Boolean    @default(true)
+  criadoEm           DateTime   @default(now())
+
+  itens Activo[]
+}
+
+/// Relações entre itens de configuração — base da análise de impacto
+model RelacaoItem {
+  id        String      @id @default(cuid())
+  origem    Activo      @relation("origem", fields: [origemId], references: [id], onDelete: Cascade)
+  origemId  String
+  destino   Activo      @relation("destino", fields: [destinoId], references: [id], onDelete: Cascade)
+  destinoId String
+  tipo      TipoRelacao @default(DEPENDE_DE)
+  critica   Boolean     @default(false)
+  nota      String?
+  criadoEm  DateTime    @default(now())
+
+  @@unique([origemId, destinoId, tipo])
 }
 
 model Departamento {
@@ -81,10 +171,21 @@ model User {
   artigos           ArtigoConhecimento[]
 }
 
+/// Item de Configuração — equipamentos, software, serviços, contratos e infraestrutura
 model Activo {
   id                String        @id @default(cuid())
   numInventario     String        @unique
+  tipo              TipoItem      @default(EQUIPAMENTO)
+  designacao        String?
   categoria         String
+  categoriaRef      Categoria?    @relation(fields: [categoriaId], references: [id])
+  categoriaId       String?
+  camposPersonalizados Json?
+  criticidade       Int           @default(3)
+  fornecedor        Fornecedor?   @relation(fields: [fornecedorId], references: [id])
+  fornecedorId      String?
+  contrato          Contrato?     @relation(fields: [contratoId], references: [id])
+  contratoId        String?
   marca             String
   modelo            String
   numSerie          String?
@@ -102,10 +203,12 @@ model Activo {
   valorSubstituicao Decimal?      @db.Decimal(10, 2)
   criadoEm          DateTime      @default(now())
 
-  eventos   EventoActivo[]
-  pedidos   Pedido[]
-  ordens    OrdemManutencao[]
-  propostas PropostaAbate[]
+  eventos         EventoActivo[]
+  pedidos         Pedido[]
+  ordens          OrdemManutencao[]
+  propostas       PropostaAbate[]
+  relacoesOrigem  RelacaoItem[]     @relation("origem")
+  relacoesDestino RelacaoItem[]     @relation("destino")
 }
 
 model EventoActivo {

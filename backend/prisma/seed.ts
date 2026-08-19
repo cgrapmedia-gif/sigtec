@@ -26,12 +26,95 @@ async function main() {
       create: { email, nome, perfil, passwordHash: hash, departamentoId: deps[dep], localizacao: loc },
     });
 
-  const admin = await mk('c.miranda@consuladoporto.gov.ao', 'Carlos Miranda', Perfil.ADMIN, 'Informática');
-  const tecnico = await mk('r.sousa@consuladoporto.gov.ao', 'Rui Sousa', Perfil.TECNICO, 'Informática');
-  const func = await mk('l.baptista@consuladoporto.gov.ao', 'Luísa Baptista', Perfil.FUNCIONARIO, 'Secretaria', 'Secretaria');
-  const direccao = await mk('direccao@consuladoporto.gov.ao', 'Ana Van-Dúnem', Perfil.DIRECCAO, 'Direcção');
-  await mk('m.fernandes@consuladoporto.gov.ao', 'Marta Fernandes', Perfil.FUNCIONARIO, 'Atendimento Consular', 'Balcão 1');
-  await mk('j.domingos@consuladoporto.gov.ao', 'João Domingos', Perfil.FUNCIONARIO, 'Atendimento Consular', 'Balcão 3');
+  const admin = await mk('carlos.miranda@consuladoporto.gov.ao', 'Carlos Miranda', Perfil.ADMIN, 'Informática');
+  const tecnico = await mk('rui.sousa@consuladoporto.gov.ao', 'Rui Sousa', Perfil.TECNICO, 'Informática');
+  const func = await mk('luisa.baptista@consuladoporto.gov.ao', 'Luísa Baptista', Perfil.FUNCIONARIO, 'Secretaria', 'Secretaria');
+  const direccao = await mk('ana.vandunem@consuladoporto.gov.ao', 'Ana Van-Dúnem', Perfil.DIRECCAO, 'Direcção');
+  await mk('marta.fernandes@consuladoporto.gov.ao', 'Marta Fernandes', Perfil.FUNCIONARIO, 'Atendimento Consular', 'Balcão 1');
+  await mk('joao.domingos@consuladoporto.gov.ao', 'João Domingos', Perfil.FUNCIONARIO, 'Atendimento Consular', 'Balcão 3');
+
+  // Categorias configuráveis (substituem a tabela fixa no código)
+  const CATS: { nome: string; tipo: any; meses: number; icone: string; rotina?: string; rotinaMeses?: number; campos?: any[] }[] = [
+    { nome: 'Computador', tipo: 'EQUIPAMENTO', meses: 60, icone: '💻', rotina: 'Limpeza interna, actualizações e antivírus', rotinaMeses: 3 },
+    { nome: 'Impressora', tipo: 'EQUIPAMENTO', meses: 72, icone: '🖨', rotina: 'Manutenção preventiva e consumíveis', rotinaMeses: 3 },
+    { nome: 'Servidor', tipo: 'EQUIPAMENTO', meses: 72, icone: '🖥', rotina: 'Backup completo e teste de restauro', rotinaMeses: 1 },
+    { nome: 'Leitor biométrico', tipo: 'EQUIPAMENTO', meses: 60, icone: '👆', rotina: 'Calibração e limpeza do sensor', rotinaMeses: 6 },
+    { nome: 'UPS', tipo: 'EQUIPAMENTO', meses: 48, icone: '🔋', rotina: 'Teste de autonomia e baterias', rotinaMeses: 6 },
+    { nome: 'Switch', tipo: 'EQUIPAMENTO', meses: 96, icone: '🔌' },
+    { nome: 'Router', tipo: 'EQUIPAMENTO', meses: 96, icone: '📶' },
+    { nome: 'Scanner', tipo: 'EQUIPAMENTO', meses: 72, icone: '📄' },
+    { nome: 'Telefone IP', tipo: 'EQUIPAMENTO', meses: 84, icone: '☎' },
+    { nome: 'Monitor', tipo: 'EQUIPAMENTO', meses: 84, icone: '🖵' },
+    {
+      nome: 'Ligação de Internet', tipo: 'SERVICO', meses: 36, icone: '🌐',
+      campos: [
+        { chave: 'larguraBanda', rotulo: 'Largura de banda', tipo: 'texto' },
+        { chave: 'ipFixo', rotulo: 'IP fixo', tipo: 'texto' },
+        { chave: 'tecnologia', rotulo: 'Tecnologia', tipo: 'texto' },
+      ],
+    },
+    {
+      nome: 'Licença de Software', tipo: 'SOFTWARE', meses: 12, icone: '🔑',
+      campos: [
+        { chave: 'postos', rotulo: 'N.º de postos contratados', tipo: 'numero' },
+        { chave: 'postosInstalados', rotulo: 'N.º de postos instalados', tipo: 'numero' },
+        { chave: 'versao', rotulo: 'Versão', tipo: 'texto' },
+        { chave: 'fimSuporte', rotulo: 'Fim de suporte do fabricante', tipo: 'data' },
+      ],
+    },
+    {
+      nome: 'Serviço em Nuvem', tipo: 'SERVICO', meses: 12, icone: '☁',
+      campos: [
+        { chave: 'plano', rotulo: 'Plano', tipo: 'texto' },
+        { chave: 'url', rotulo: 'Endereço', tipo: 'texto' },
+      ],
+    },
+    { nome: 'Certificado Digital', tipo: 'SERVICO', meses: 12, icone: '🔐', campos: [{ chave: 'dominio', rotulo: 'Domínio', tipo: 'texto' }] },
+    { nome: 'Climatização', tipo: 'INFRAESTRUTURA', meses: 120, icone: '❄', rotina: 'Limpeza de filtros e verificação de gás', rotinaMeses: 6 },
+    { nome: 'Videovigilância', tipo: 'INFRAESTRUTURA', meses: 96, icone: '📹' },
+    { nome: 'Controlo de Acessos', tipo: 'INFRAESTRUTURA', meses: 96, icone: '🚪' },
+    { nome: 'Consumível', tipo: 'CONSUMIVEL', meses: 12, icone: '📦', campos: [{ chave: 'stockMinimo', rotulo: 'Stock mínimo', tipo: 'numero' }] },
+  ];
+  const catIds: Record<string, string> = {};
+  for (const c of CATS) {
+    const cat = await prisma.categoria.upsert({
+      where: { nome: c.nome },
+      update: {},
+      create: {
+        nome: c.nome, tipo: c.tipo, cicloVidaMeses: c.meses, icone: c.icone,
+        rotinaTarefa: c.rotina ?? null, rotinaMeses: c.rotinaMeses ?? null,
+        esquemaCampos: c.campos ?? [],
+      },
+    });
+    catIds[c.nome] = cat.id;
+  }
+
+  // Fornecedores e contratos de exemplo
+  const forn = async (nome: string, dados: any) =>
+    prisma.fornecedor.upsert({ where: { nome }, update: {}, create: { nome, ...dados } });
+
+  const nos = await forn('NOS Comunicações', { contactoNome: 'Gestor de conta empresarial', telefone: '+351 21 000 0000', apoioTecnico: '16990 (empresas)' });
+  const infoPorto = await forn('InfoPorto Assistência Técnica', { contactoNome: 'Serviço de assistência', telefone: '+351 22 000 0000', apoioTecnico: 'apoio@infoporto.example' });
+  await forn('Dermalog Portugal', { contactoNome: 'Suporte biometria', apoioTecnico: 'suporte@dermalog.example' });
+
+  if ((await prisma.contrato.count()) === 0) {
+    const daquiA = (meses: number) => { const d = new Date(); d.setMonth(d.getMonth() + meses); return d; };
+    await prisma.contrato.create({
+      data: {
+        numero: 'CT-2026-001', designacao: 'Ligação de Internet dedicada 500 Mbps', tipo: 'Telecomunicações',
+        fornecedorId: nos.id, dataInicio: new Date('2024-09-01'), dataFim: daquiA(2),
+        renovacaoAutomatica: true, avisoDias: 90, valorMensal: 189.9, slaHoras: 4, numeroCliente: 'CGA-PT-88214',
+        observacoes: 'Renovação automática por 24 meses se não for denunciado com 60 dias de antecedência.',
+      },
+    });
+    await prisma.contrato.create({
+      data: {
+        numero: 'CT-2026-002', designacao: 'Assistência técnica ao parque informático', tipo: 'Manutenção',
+        fornecedorId: infoPorto.id, dataInicio: new Date('2025-01-01'), dataFim: daquiA(10),
+        renovacaoAutomatica: false, avisoDias: 60, valorMensal: 120, slaHoras: 8,
+      },
+    });
+  }
 
   // Activos
   const A = async (a: {
@@ -46,6 +129,7 @@ async function main() {
         numInventario: a.num, categoria: a.cat, marca: a.marca, modelo: a.modelo, numSerie: a.serie,
         dataAquisicao: new Date(a.aq), fimGarantia: a.gar ? new Date(a.gar) : null,
         localizacao: a.loc, departamentoId: deps[a.dep], responsavelId: a.respId,
+        categoriaId: catIds[a.cat] ?? null,
         estado: a.estado ?? EstadoActivo.OPERACIONAL, falhas6m: a.falhas ?? 0,
         temDisco: a.disco ?? false, custoReparacao: a.custoRep, valorSubstituicao: a.valorSubst,
       },
@@ -66,6 +150,51 @@ async function main() {
   await A({ num: 'CGA-INF-0013', cat: 'Scanner', marca: 'Fujitsu', modelo: 'fi-7160', serie: 'A3C0019442', aq: '2022-10-05', gar: '2025-10-05', loc: 'Arquivo', dep: 'Secretaria', respId: func.id, falhas: 1 });
   await A({ num: 'CGA-INF-0014', cat: 'Router', marca: 'Cisco Meraki', modelo: 'MX84', serie: 'Q2QN-9J8L-JKMV', aq: '2020-03-01', gar: '2027-03-01', loc: 'Sala técnica', dep: 'Informática' });
 
+  // Itens não-informáticos: serviços, software e infraestrutura
+  const contratoNet = await prisma.contrato.findUnique({ where: { numero: 'CT-2026-001' } });
+  const itemExtra = async (num: string, dados: any) =>
+    prisma.activo.upsert({ where: { numInventario: num }, update: {}, create: { numInventario: num, ...dados } });
+
+  const net = await itemExtra('CGA-SRV-0001', {
+    tipo: 'SERVICO', designacao: 'Ligação de Internet dedicada — sede', categoria: 'Ligação de Internet',
+    categoriaId: catIds['Ligação de Internet'], marca: 'NOS', modelo: 'Fibra Empresas 500',
+    dataAquisicao: new Date('2024-09-01'), localizacao: 'Sala técnica', departamentoId: deps['Informática'],
+    fornecedorId: nos.id, contratoId: contratoNet?.id ?? null, criticidade: 5,
+    camposPersonalizados: { larguraBanda: '500/500 Mbps', ipFixo: '188.82.___.___', tecnologia: 'Fibra óptica' },
+  });
+  await itemExtra('CGA-SW-0001', {
+    tipo: 'SOFTWARE', designacao: 'Antivírus institucional — 14 postos', categoria: 'Licença de Software',
+    categoriaId: catIds['Licença de Software'], marca: 'ESET', modelo: 'PROTECT Entry',
+    dataAquisicao: new Date('2025-10-01'), fimGarantia: new Date('2026-10-01'),
+    localizacao: 'Todo o Consulado', departamentoId: deps['Informática'], criticidade: 4,
+    camposPersonalizados: { postos: 14, postosInstalados: 14, versao: '11.1', fimSuporte: '2028-12-31' },
+  });
+  await itemExtra('CGA-INFR-0001', {
+    tipo: 'INFRAESTRUTURA', designacao: 'Climatização da sala técnica', categoria: 'Climatização',
+    categoriaId: catIds['Climatização'], marca: 'Daikin', modelo: 'FTXM35R',
+    dataAquisicao: new Date('2021-06-15'), localizacao: 'Sala técnica', departamentoId: deps['Informática'], criticidade: 5,
+  });
+
+  // Relações: o que depende de quê (base da análise de impacto)
+  const rel = async (origemNum: string, destinoNum: string, tipo: any, critica = false) => {
+    const o = await prisma.activo.findUnique({ where: { numInventario: origemNum } });
+    const d = await prisma.activo.findUnique({ where: { numInventario: destinoNum } });
+    if (!o || !d) return;
+    await prisma.relacaoItem.upsert({
+      where: { origemId_destinoId_tipo: { origemId: o.id, destinoId: d.id, tipo } },
+      update: {}, create: { origemId: o.id, destinoId: d.id, tipo, critica },
+    });
+  };
+  await rel('CGA-INF-0005', 'CGA-SRV-0001', 'DEPENDE_DE', true);
+  await rel('CGA-INF-0006', 'CGA-SRV-0001', 'DEPENDE_DE', true);
+  await rel('CGA-INF-0001', 'CGA-INF-0010', 'LIGADO_A');
+  await rel('CGA-INF-0002', 'CGA-INF-0010', 'LIGADO_A');
+  await rel('CGA-INF-0003', 'CGA-INF-0010', 'LIGADO_A');
+  await rel('CGA-INF-0010', 'CGA-INF-0011', 'DEPENDE_DE', true);
+  await rel('CGA-INF-0009', 'CGA-INF-0011', 'DEPENDE_DE', true);
+  await rel('CGA-INF-0009', 'CGA-INFR-0001', 'DEPENDE_DE', true);
+  await rel('CGA-SRV-0001', 'CGA-INF-0014', 'DEPENDE_DE');
+
   // Historico tecnico
   await prisma.eventoActivo.createMany({
     data: [
@@ -80,12 +209,12 @@ async function main() {
   const existente = await prisma.pedido.count();
   if (existente === 0) {
     const P = (n: string, dados: any) => prisma.pedido.create({ data: { numero: n, ...dados } });
-    const p1 = await P('INC-2026-00131', { assunto: 'Computador do balcão 3 não arranca', categoria: 'Hardware', prioridade: Prioridade.CRITICA, estado: EstadoPedido.EM_RESOLUCAO, slaHoras: 4, autorId: (await prisma.user.findUniqueOrThrow({ where: { email: 'j.domingos@consuladoporto.gov.ao' } })).id, tecnicoId: admin.id, activoId: a3.id, criadoEm: new Date('2026-08-05T09:12:00') });
+    const p1 = await P('INC-2026-00131', { assunto: 'Computador do balcão 3 não arranca', categoria: 'Hardware', prioridade: Prioridade.CRITICA, estado: EstadoPedido.EM_RESOLUCAO, slaHoras: 4, autorId: (await prisma.user.findUniqueOrThrow({ where: { email: 'joao.domingos@consuladoporto.gov.ao' } })).id, tecnicoId: admin.id, activoId: a3.id, criadoEm: new Date('2026-08-05T09:12:00') });
     await prisma.eventoPedido.createMany({ data: [
       { pedidoId: p1.id, descricao: 'Pedido aberto pelo funcionário', criadoEm: new Date('2026-08-05T09:12:00') },
       { pedidoId: p1.id, descricao: 'Diagnóstico: disco danificado. Aguardando SSD de substituição', autorId: admin.id, criadoEm: new Date('2026-08-05T11:05:00') },
     ]});
-    const p2 = await P('INC-2026-00130', { assunto: 'Leitor biométrico do balcão 2 falha na recolha de impressões', categoria: 'Sistema biométrico', prioridade: Prioridade.ALTA, estado: EstadoPedido.AGUARDA_MATERIAL, slaHoras: 8, autorId: (await prisma.user.findUniqueOrThrow({ where: { email: 'm.fernandes@consuladoporto.gov.ao' } })).id, tecnicoId: tecnico.id, activoId: a6.id, criadoEm: new Date('2026-08-04T10:22:00') });
+    const p2 = await P('INC-2026-00130', { assunto: 'Leitor biométrico do balcão 2 falha na recolha de impressões', categoria: 'Sistema biométrico', prioridade: Prioridade.ALTA, estado: EstadoPedido.AGUARDA_MATERIAL, slaHoras: 8, autorId: (await prisma.user.findUniqueOrThrow({ where: { email: 'marta.fernandes@consuladoporto.gov.ao' } })).id, tecnicoId: tecnico.id, activoId: a6.id, criadoEm: new Date('2026-08-04T10:22:00') });
     await prisma.eventoPedido.create({ data: { pedidoId: p2.id, descricao: 'Equipamento enviado para manutenção externa', autorId: tecnico.id } });
     const p3 = await P('INC-2026-00129', { assunto: 'Impressora da sala comum com manchas na impressão', categoria: 'Impressão', prioridade: Prioridade.MEDIA, estado: EstadoPedido.EM_ANALISE, slaHoras: 24, autorId: func.id, tecnicoId: admin.id, activoId: a7.id, criadoEm: new Date('2026-08-03T15:30:00') });
     await prisma.eventoPedido.create({ data: { pedidoId: p3.id, descricao: 'Técnico agendou verificação do tambor', autorId: admin.id } });
@@ -159,10 +288,10 @@ async function main() {
   }
 
   console.log('Seed concluído. Contas (password: sigtec2026):');
-  console.log('  Admin:       c.miranda@consuladoporto.gov.ao');
-  console.log('  Técnico:     r.sousa@consuladoporto.gov.ao');
-  console.log('  Funcionária: l.baptista@consuladoporto.gov.ao');
-  console.log('  Direcção:    direccao@consuladoporto.gov.ao');
+  console.log('  Admin:       carlos.miranda@consuladoporto.gov.ao');
+  console.log('  Técnico:     rui.sousa@consuladoporto.gov.ao');
+  console.log('  Funcionária: luisa.baptista@consuladoporto.gov.ao');
+  console.log('  Direcção:    ana.vandunem@consuladoporto.gov.ao');
 }
 
 main().catch((e) => { console.error(e); process.exit(1); }).finally(() => prisma.$disconnect());

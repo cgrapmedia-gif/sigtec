@@ -30,6 +30,24 @@ export class DashboardService {
     }
     const candidatosAbate = activos.filter((a) => analisarObsolescencia(a).length >= 2).length;
 
+    // Contratos a expirar — evita renovações automáticas despercebidas
+    const contratos = await this.prisma.contrato.findMany({
+      where: { activo: true, dataFim: { not: null } },
+      include: { fornecedor: { select: { nome: true } } },
+    });
+    for (const c of contratos) {
+      const dias = Math.round((new Date(c.dataFim!).getTime() - Date.now()) / 86400000);
+      if (dias >= 0 && dias <= c.avisoDias) {
+        proactivos.push({
+          titulo: `Contrato ${c.numero} expira em ${dias} dias`,
+          detalhe: `${c.designacao} — ${c.fornecedor.nome}`,
+          accao: c.renovacaoAutomatica
+            ? 'Renovação automática: denunciar agora se não se pretender renovar'
+            : 'Iniciar processo de renovação ou consulta ao mercado',
+        });
+      }
+    }
+
     return { totalActivos, operacionais, abatidos, pedidosAbertos, criticos, ordens15d, candidatosAbate, proactivos };
   }
 }

@@ -15,6 +15,9 @@ import { QuestionarioModule } from './questionario/questionario.module';
 import { NotificacoesModule } from './notificacoes/notificacoes.module';
 import { RelatoriosModule } from './relatorios/relatorios.module';
 import { ConhecimentoModule } from './conhecimento/conhecimento.module';
+import { CategoriasModule } from './categorias/categorias.module';
+import { FornecedoresModule } from './fornecedores/fornecedores.module';
+import { DepartamentosModule } from './departamentos/departamentos.module';
 
 @Module({
   imports: [
@@ -32,6 +35,9 @@ import { ConhecimentoModule } from './conhecimento/conhecimento.module';
     NotificacoesModule,
     RelatoriosModule,
     ConhecimentoModule,
+    CategoriasModule,
+    FornecedoresModule,
+    DepartamentosModule,
     DashboardModule,
     QuestionarioModule,
   ],

@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditoriaService } from '../auditoria/auditoria.service';
+import { permissoesDe } from '../comum/permissoes';
 
 @Injectable()
 export class AuthService {
@@ -52,6 +53,7 @@ export class AuthService {
       perfil: u.perfil,
       localizacao: u.localizacao,
       precisaTrocarPassword: u.precisaTrocarPassword,
+      permissoes: permissoesDe(u.perfil),
       departamento: u.departamento?.nome ?? null,
     };
   }
